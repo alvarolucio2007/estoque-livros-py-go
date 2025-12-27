@@ -81,6 +81,7 @@ class Service:
         return dados
 
     def listar_todos_livros(self) -> list[Livro]:
-        if not self.db.carregar_dados():
+        livros=self.db.carregar_dados()
+        if not livros:
             raise ValueError("Não há livros para serem listados!")
-        return self.db.carregar_dados()
+        return livros
