@@ -54,9 +54,6 @@ class DataBase:
             _ = self.cursor.execute(comando, (novo_valor, id))
         self.connection.commit()
 
-    def listar_livros(self) -> list[Livro]:
-        return self.carregar_dados()
-
     def buscar_livros(self, coluna: str, valor: str | int) -> list[Livro]:
         if coluna not in ("titulo", "autor"):
             return []
@@ -83,3 +80,10 @@ class DataBase:
         _ = self.cursor.execute(comando, (titulo,))
         resultado = self.cursor.fetchone()
         return resultado is not None
+
+    def listar_id(self) -> set[int]:
+        comando = "SELECT id FROM livros "
+        _ = self.cursor.execute(comando)
+        tuplas_id = self.cursor.fetchall()
+        lista = [elemento[0] for elemento in tuplas_id]
+        return set(lista)

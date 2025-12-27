@@ -3,10 +3,10 @@ import dataclasses
 
 @dataclasses.dataclass
 class Livro:
-    id: int
+    id: int | None
     titulo: str
     autor: str
     preco: float
     ano: int
     quantidade: int
-    disponivel: bool
+    disponivel: bool | int
