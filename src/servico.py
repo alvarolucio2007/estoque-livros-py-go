@@ -26,7 +26,7 @@ class Service:
             raise ValueError(
                 f"O ano tem que ser menor que o ano atual! ({datetime.today().year + 1})"
             )
-        if quantidade<0:
+        if quantidade < 0:
             raise ValueError("A quantidade não pode ser negativa!")
         disponivel = 1 if quantidade > 0 else 0
 

@@ -7,12 +7,27 @@ class DataBase:
     cursor: sqlite3.Cursor
 
     def __init__(self) -> None:
-        self.connection = sqlite3.connect("teste.db")
+        self.connection = sqlite3.connect("teste.db", check_same_thread=False)
         self.cursor = self.connection.cursor()
         _ = self.cursor.execute(
             "CREATE TABLE IF NOT EXISTS livros (id INTEGER PRIMARY KEY AUTOINCREMENT,titulo TEXT,autor TEXT, preco REAL,ano INTEGER, quantidade INTEGER, disponivel INTEGER)"
         )
         self.connection.commit()
+
+    def fechar(self) -> None:
+        try:
+            if self.cursor:
+                self.cursor.close()
+            if self.connection:
+                self.connection.close()
+        except sqlite3.Error as e:
+            print(f"Erro ao fechar banco! {e}")
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.fechar()
 
     def adicionar_livro(self, livro: Livro) -> None:
         comando = "INSERT INTO livros (titulo,autor,preco,ano,quantidade,disponivel) VALUES (?,?,?,?,?,?)"
@@ -69,8 +84,10 @@ class DataBase:
         )
         _ = self.cursor.execute(comando)
         tupla: tuple[str, float | None, int | None] = self.cursor.fetchone()
+        if not tupla:
+            return {"Títulos": 0, "Soma: ": 0.0, "Estoque utilizado: ": 0}
         return {
-            "Títulos: ": tupla[0],
+            "Títulos: ": tupla[0] or 0,
             "Soma: ": tupla[1] or 0.0,
             "Estoque utilizado: ": tupla[2] or 0,
         }
