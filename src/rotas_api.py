@@ -10,14 +10,35 @@ async def listar_livros(service: Service = Depends(Service)):
     return service.listar_todos_livros()
 
 
+@app.get("/livros/listar_id")
+async def listar_id(service: Service = Depends(Service)):
+    return service.set_id
+
+
 @app.get("/livros/relatorio")
 async def gerar_relatorio(service: Service = Depends(Service)):
     return service.gerar_relatorio_formatado()
 
 
 @app.get("/livros/{livro_id}", status_code=200)
-async def buscar_livro(livro_id: int, service: Service = Depends(Service)):
+async def buscar_livro_codigo(livro_id: int, service: Service = Depends(Service)):
     busca = service.buscar_livro_codigo(livro_id)
+    if not busca:
+        raise HTTPException(status_code=404, detail="Livro Não Encontrado!")
+    return busca
+
+
+@app.get("/livros/titulo/{titulo}", status_code=200)
+async def buscar_livro_titulo(livro_titulo: str, service: Service = Depends(Service)):
+    busca = service.buscar_livro_titulo(livro_titulo)
+    if not busca:
+        raise HTTPException(status_code=404, detail="Livro Não Encontrado!")
+    return busca
+
+
+@app.get("/livros/autor/{autor}", status_code=200)
+async def buscar_livro_autor(livro_autor: str, service: Service = Depends(Service)):
+    busca = service.buscar_livro_autor(livro_autor)
     if not busca:
         raise HTTPException(status_code=404, detail="Livro Não Encontrado!")
     return busca

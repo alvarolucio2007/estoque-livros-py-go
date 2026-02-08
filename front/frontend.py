@@ -1,20 +1,11 @@
 import pandas as pd
 import streamlit as st
-import requests
-import src.servico as srv
+import front.clients as ct
 
 API_URL = "http://127.0.0.1:8000"
 
 
-@st.cache_resource
-def get_service():
-    return srv.Service()
-
-
 class FrontEnd:
-    def __init__(self) -> None:
-        self.servico = get_service()
-
     def exibir_mensagens_pendentes(self) -> None:
         if "success_message" in st.session_state:
             _ = st.success(st.session_state["success_message"])
@@ -60,12 +51,14 @@ class FrontEnd:
             clique_salvar = st.form_submit_button("Cadastrar e Salvar", width="stretch")
             if clique_salvar:
                 try:
-                    self.servico.cadastrar_livro(
-                        titulo=str(titulo),
-                        preco=float(preco),
-                        autor=str(autor),
-                        ano=int(ano),
-                        quantidade=int(quantidade),
+                    ct.cadastrar_livro(
+                        {
+                            "titulo": str(titulo),
+                            "autor": str(autor),
+                            "ano": int(ano),
+                            "preco": float(preco),
+                            "quantidade": int(quantidade),
+                        }
                     )
                     st.session_state["success_message"] = (
                         f"Produto {titulo} adicionado com sucesso!"
@@ -77,12 +70,9 @@ class FrontEnd:
     def renderizar_listar(self) -> None:
         _ = st.title("Visão Geral do Estoque de Livros")
         try:
-            livros = self.servico.listar_todos_livros()
+            livros = ct.listar_livro()
             if livros:
-                dados_para_exibir = [vars(livro) for livro in livros]
-                _ = st.dataframe(
-                    dados_para_exibir, use_container_width=True, hide_index=True
-                )
+                _ = st.dataframe(livros, use_container_width=True, hide_index=True)
             else:
                 _ = st.info("Nenhum livro cadastrado no momento.")
         except Exception as e:
@@ -94,8 +84,8 @@ class FrontEnd:
         if tipo_busca == "Código":
             busca = st.number_input("Qual seria o código?", min_value=0, step=1)
             if busca:
-                resultados = self.servico.buscar_livro_codigo(busca)
-                dados = [vars(livro) for livro in resultados]
+                resultados = [ct.buscar_livro_codigo(busca)]
+                dados = [livro for livro in resultados]
                 df_resultados = pd.DataFrame(dados)
                 if not df_resultados.empty:
                     _ = st.success(f"Encontrado(s) {len(df_resultados)} produto(s).")
@@ -105,7 +95,7 @@ class FrontEnd:
         elif tipo_busca == "Título":
             busca = st.text_input("Qual seria o título?", max_chars=100)
             if busca:
-                resultados = self.servico.buscar_livro_titulo(busca)
+                resultados = ct.buscar_livro_titulo(busca)
                 dados = [vars(livro) for livro in resultados]
                 df_resultados = pd.DataFrame(dados)
                 if not df_resultados.empty:
@@ -118,7 +108,7 @@ class FrontEnd:
         elif tipo_busca == "Autor":
             busca = st.text_input("Qual seria o autor?", max_chars=100)
             if busca:
-                resultados = self.servico.buscar_livro_autor(busca)
+                resultados = ct.buscar_livro_autor(busca)
                 dados = [vars(livro) for livro in resultados]
                 df_resultados = pd.DataFrame(dados)
                 if not df_resultados.empty:
@@ -147,6 +137,7 @@ class FrontEnd:
                     key="upd_valor_num",
                     format="%.2f",
                 )
+
             elif tipo_de_dado in ("Título", "Autor"):
                 novo_valor = st.text_input(
                     "Qual seria o novo valor? ", max_chars=100, key="upd_valor_str"
@@ -161,15 +152,27 @@ class FrontEnd:
                 )
             clique_salvar = st.form_submit_button("Atualizar e Salvar", width="stretch")
             if clique_salvar:
-                if novo_valor is None:
-                    _ = st.error("Erro! Por favor, insira o novo valor corretamente!")
-                    return
                 try:
-                    self.servico.atualizar_livro(
-                        id=int(codigo),
-                        campo=tipo_de_dado,
-                        novo_valor=novo_valor,
-                    )
+                    if tipo_de_dado == "Preço":
+                        assert isinstance(novo_valor, float)
+                        ct.editar_preco(codigo, novo_valor)
+                    elif tipo_de_dado == "Título":
+                        assert isinstance(novo_valor, str)
+                        ct.editar_titulo(codigo, novo_valor)
+                    elif tipo_de_dado == "Autor":
+                        assert isinstance(novo_valor, str)
+                        ct.editar_autor(codigo, novo_valor)
+                    elif tipo_de_dado == "Ano":
+                        assert isinstance(novo_valor, int)
+                        ct.editar_ano(codigo, novo_valor)
+                    elif tipo_de_dado == "Quantidade":
+                        assert isinstance(novo_valor, int)
+                        ct.editar_quantidade(codigo, novo_valor)
+                    if novo_valor is None:
+                        _ = st.error(
+                            "Erro! Por favor, insira o novo valor corretamente!"
+                        )
+                        return
                 except Exception as e:
                     _ = st.error(f"Falha na atualização: {e}!")
 
@@ -188,15 +191,15 @@ class FrontEnd:
 
         if st.session_state.codigo_excluir:
             cid = st.session_state.codigo_excluir
-            if cid in self.servico.set_id:
-                livros = self.servico.listar_todos_livros()
+            if cid in ct.listar_id():
+                livros = ct.listar_livro()
                 titulo = next(
-                    (livro.titulo for livro in livros if livro.id == cid),
+                    (livro["titulo"] for livro in livros if livro["id"] == cid),
                     "Desconhecido",
                 )
                 _ = st.error(f"Excluir **{titulo}** (ID:{cid})?")
                 if st.button("CONFIRMAR EXCLUSÃO DEFINITIVA"):
-                    self.servico.excluir_livro(cid)
+                    ct.deletar_livro(cid)
                     st.session_state.codigo_excluir = None  # Limpa o ID após deletar
                     st.session_state["success_message"] = f"Livro {titulo} removido!"
                     st.rerun()
@@ -206,11 +209,11 @@ class FrontEnd:
 
     def renderizar_relatorios(self) -> None:
         _ = st.title("Relatórios de estoque dos livros")
-        livros = self.servico.listar_todos_livros()
+        livros = ct.gerar_relatorio()
         if not livros:
             _ = st.info("Nenhum livro cadastrado para gerar relatórios.")
             return
-        relatorio = self.servico.gerar_relatorio_formatado()
+        relatorio = ct.gerar_relatorio()
         col1, col2, col3, col4 = st.columns(4)
         _ = col1.metric("Total de títulos", relatorio["total_livros"])
         _ = col2.metric("Livros disponíveis", relatorio["livros_disponiveis"])
