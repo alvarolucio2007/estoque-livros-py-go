@@ -8,6 +8,7 @@ class DataBase:
 
     def __init__(self) -> None:
         self.connection = sqlite3.connect("estoque_livros.db", check_same_thread=False)
+        self.row_factory = sqlite3.Row
         self.cursor = self.connection.cursor()
         _ = self.cursor.execute(
             "CREATE TABLE IF NOT EXISTS livros (id INTEGER PRIMARY KEY AUTOINCREMENT,titulo TEXT,autor TEXT, preco REAL,ano INTEGER, quantidade INTEGER, disponivel INTEGER)"
@@ -100,14 +101,38 @@ class DataBase:
         sql_valor: str = f"%{autor}"
         _ = self.cursor.execute(comando, (sql_valor,))
         encontrados = self.cursor.fetchall()
-        return [Livro(*linha) for linha in encontrados]
+        livro_formatado = []
+        for linha in encontrados:
+            dados_do_livro = {
+                "id": linha[0],
+                "titulo": linha[1],
+                "autor": linha[2],
+                "ano": linha[3],
+                "preco": linha[4],
+                "quantidade": linha[5],
+                "disponivel": True if linha[5] > 0 else False,
+            }
+            livro_formatado.append(Livro(**dados_do_livro))
+        return livro_formatado
 
     def buscar_livros_autor(self, autor: str) -> list[Livro]:
         comando = "SELECT * FROM livros WHERE autor LIKE ?"
         sql_valor: str = f"%{autor}"
         _ = self.cursor.execute(comando, (sql_valor,))
         encontrados = self.cursor.fetchall()
-        return [Livro(*linha) for linha in encontrados]
+        livro_formatado = []
+        for linha in encontrados:
+            dados_do_livro = {
+                "id": linha[0],
+                "titulo": linha[1],
+                "autor": linha[2],
+                "ano": linha[3],
+                "preco": linha[4],
+                "quantidade": linha[5],
+                "disponivel": True if linha[5] > 0 else False,
+            }
+            livro_formatado.append(Livro(**dados_do_livro))
+        return livro_formatado
 
     def gerar_relatorio(self) -> dict[str, int | str | float]:
         # Query para pegar tudo de uma vez

@@ -1,4 +1,6 @@
 from datetime import datetime
+
+from streamlit.delta_generator import Value
 from database import DataBase
 from livro import Livro
 
@@ -79,13 +81,13 @@ class Service:
         return encontrados
 
     def buscar_livro_titulo(self, titulo: str) -> list[Livro] | None:
-        encontrados = self.db.buscar_livros("titulo", titulo)
+        encontrados = self.db.buscar_livros_titulo(titulo)
         if not encontrados:
             raise ValueError("Nenhum Livro Encontrado!")
         return encontrados
 
     def buscar_livro_autor(self, autor: str) -> list[Livro]:
-        encontrados = self.db.buscar_livros("autor", autor)
+        encontrados = self.db.buscar_livros_autor(autor)
         if not encontrados:
             raise ValueError("Nenhum Livro Encontrado!")
         return encontrados
@@ -100,7 +102,9 @@ class Service:
     def atualizar_livro(
         self, id: int, campo: str, novo_valor: str | int | float
     ) -> None:
+        print(f"DEBUG: Tentando atualizar ID {id}")
         if not self.verificar_id(id):
+            print(f"DEBUG:ID {id} não encontrado!")
             return None
         traducao = {
             "Título": "titulo",
@@ -115,17 +119,23 @@ class Service:
             raise ValueError(
                 "Para trocar o título ou autor, é necessário que o novo valor seja texto!"
             )
-        if campo == "Preço" and not isinstance(novo_valor, float):
-            raise ValueError(
-                "Para trocar o preço, é necessário que o novo valor seja um valor numérico com decimais! "
-            )
-        if campo == "Quantidade" and not isinstance(novo_valor, int):
-            if not isinstance(novo_valor, int):
+        if campo == "Preço":
+            try:
+                novo_valor = float(novo_valor)
+
+            except:
                 raise ValueError(
-                    "Para trocar a quantidade, é necessário que o novo valor seja um valor numérico inteiro! (Sem decimais.)"
+                    "Para trocar o preço, é necessário que o novo valor seja um valor numérico com decimais! "
                 )
-            novo_status = 1 if novo_valor > 0 else 0
-            self.db.atualizar_livros(id, "disponivel", novo_status)
+        if campo == "Quantidade":
+            try:
+                novo_valor = int(novo_valor)
+                novo_status = 1 if novo_valor > 0 else 0
+                self.db.atualizar_livros(id, "disponivel", novo_status)
+            except:
+                raise ValueError(" A quantidade deve ser int!")
+        if campo in ("Título", "Autor") and not isinstance(novo_valor, str):
+            raise ValueError("Título e autor devem ser str.")
         self.db.atualizar_livros(id, traducao[campo], novo_valor)
 
     def atualizar_livro_titulo(self, id: int, novo_titulo: str) -> Livro | None:

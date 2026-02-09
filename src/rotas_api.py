@@ -29,16 +29,16 @@ async def buscar_livro_codigo(livro_id: int, service: Service = Depends(Service)
 
 
 @app.get("/livros/titulo/{titulo}", status_code=200)
-async def buscar_livro_titulo(livro_titulo: str, service: Service = Depends(Service)):
-    busca = service.buscar_livro_titulo(livro_titulo)
+async def buscar_livro_titulo(titulo: str, service: Service = Depends(Service)):
+    busca = service.buscar_livro_titulo(titulo)
     if not busca:
         raise HTTPException(status_code=404, detail="Livro Não Encontrado!")
     return busca
 
 
 @app.get("/livros/autor/{autor}", status_code=200)
-async def buscar_livro_autor(livro_autor: str, service: Service = Depends(Service)):
-    busca = service.buscar_livro_autor(livro_autor)
+async def buscar_livro_autor(autor: str, service: Service = Depends(Service)):
+    busca = service.buscar_livro_autor(autor)
     if not busca:
         raise HTTPException(status_code=404, detail="Livro Não Encontrado!")
     return busca

@@ -96,7 +96,7 @@ class FrontEnd:
             busca = st.text_input("Qual seria o título?", max_chars=100)
             if busca:
                 resultados = ct.buscar_livro_titulo(busca)
-                dados = [vars(livro) for livro in resultados]
+                dados = [livro for livro in resultados]
                 df_resultados = pd.DataFrame(dados)
                 if not df_resultados.empty:
                     _ = st.success(f"Encontrados {len(df_resultados)} produto(s).")
@@ -109,7 +109,7 @@ class FrontEnd:
             busca = st.text_input("Qual seria o autor?", max_chars=100)
             if busca:
                 resultados = ct.buscar_livro_autor(busca)
-                dados = [vars(livro) for livro in resultados]
+                dados = [livro for livro in resultados]
                 df_resultados = pd.DataFrame(dados)
                 if not df_resultados.empty:
                     _ = st.success(f"Encontrados {len(df_resultados)} produto(s).")

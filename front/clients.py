@@ -63,17 +63,17 @@ def buscar_livro_codigo(livro_id: int):
         raise Exception("Erro de conexão ao tentar buscar o livro. ")
 
 
-def buscar_livro_autor(livro_autor: str):
+def buscar_livro_autor(autor: str):
     try:
-        response = requests.get(f"{API_URL}/livros/autor/{livro_autor}")
+        response = requests.get(f"{API_URL}/livros/autor/{autor}")
         return _tratar_resposta(response)
     except requests.exceptions.ConnectionError:
         raise Exception("Erro de conexão ao tentar buscar o livro. ")
 
 
-def buscar_livro_titulo(livro_titulo: str):
+def buscar_livro_titulo(titulo: str):
     try:
-        response = requests.get(f"{API_URL}/livros/titulo/{livro_titulo}")
+        response = requests.get(f"{API_URL}/livros/titulo/{titulo}")
         return _tratar_resposta(response)
     except requests.exceptions.ConnectionError:
         raise Exception("Erro de conexão ao tentar buscar o livro. ")
@@ -93,9 +93,9 @@ def cadastrar_livro(livro_dados: dict):
 # --- Patch (Editar) ---
 
 
-def editar_titulo(livro_id: int, titulo: str):
+def editar_titulo(id: int, novo_titulo: str):
     try:
-        response = requests.patch(f"{API_URL}/livros/{livro_id}/titulo?titulo={titulo}")
+        response = requests.patch(f"{API_URL}/livros/{id}/titulo?titulo={novo_titulo}")
         return _tratar_resposta(response)
     except requests.exceptions.ConnectionError:
         raise Exception("Erro de conexão ao tentar editar o título.")
