@@ -1,8 +1,7 @@
 from datetime import datetime
 
-from streamlit.delta_generator import Value
-from database import DataBase
-from livro import Livro
+from src.database import DataBase
+from src.livro import Livro
 
 
 class Service:

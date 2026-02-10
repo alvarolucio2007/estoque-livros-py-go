@@ -1,5 +1,5 @@
 import sqlite3
-from livro import Livro
+from src.livro import Livro
 
 
 class DataBase:

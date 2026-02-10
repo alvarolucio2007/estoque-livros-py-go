@@ -3,7 +3,7 @@ import streamlit as st
 import front.clients as ct
 import os
 
-API_URL = os.getenv("http://localhost:8000")
+API_URL = os.getenv("API_URL", "http://localhost:8000")
 
 
 class FrontEnd:

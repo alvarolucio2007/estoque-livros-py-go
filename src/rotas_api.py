@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Depends, HTTPException
-from fastapi.middleware.corsCORSMiddleware import CORSMiddleware
-from servico import Service
-from livro import LivroCadastrar
+from fastapi.middleware.cors import CORSMiddleware
+from src.servico import Service
+from src.livro import LivroCadastrar
 
 app = FastAPI()
 app.add_middleware(
