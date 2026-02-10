@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:latest
+    container_name: postgres_db
+    environment:
+      POSTGRES_USER: usuario_estoque
+      POSTGRES_PASSWORD: senha_dificil
+      POSTGRES_DB: estoque_livros
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  app:
+    build: .
+    container_name: streamlit_app
+    ports:
+      - "8501:8501"
+    depends_on:
+      - db
+    environment:
+      # Aqui está o segredo: o HOST é o nome do serviço 'db'
+      DB_HOST: db 
+      DB_NAME: estoque_livros
+      DB_USER: usuario_estoque
+      DB_PASS: senha_dificil
+
+volumes:
+  pgdata:
