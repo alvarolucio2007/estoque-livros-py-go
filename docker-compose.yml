@@ -1,31 +1,21 @@
 version: '3.8'
-
 services:
-  db:
-    image: postgres:latest
-    container_name: postgres_db
-    environment:
-      POSTGRES_USER: usuario_estoque
-      POSTGRES_PASSWORD: senha_dificil
-      POSTGRES_DB: estoque_livros
-    ports:
-      - "5432:5432"
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-
-  app:
+  api:
     build: .
-    container_name: streamlit_app
+    container_name: estoque_api
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+    command: uvicorn src.app:app --host 0.0.0.0 --port 8000
+
+  front:
+    build: .
+    container_name: estoque_front
+    depends_on:
+      - api
+    environment:
+      - API_URL=http://api:8000
     ports:
       - "8501:8501"
-    depends_on:
-      - db
-    environment:
-      # Aqui está o segredo: o HOST é o nome do serviço 'db'
-      DB_HOST: db 
-      DB_NAME: estoque_livros
-      DB_USER: usuario_estoque
-      DB_PASS: senha_dificil
-
-volumes:
-  pgdata:
+    command: streamlit run app.py --server.port=8501 --server.address=0.0.0.0

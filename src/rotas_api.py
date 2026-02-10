@@ -1,8 +1,16 @@
 from fastapi import FastAPI, Depends, HTTPException
+from fastapi.middleware.corsCORSMiddleware import CORSMiddleware
 from servico import Service
 from livro import LivroCadastrar
 
 app = FastAPI()
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 @app.get("/livros")
