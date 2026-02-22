@@ -109,26 +109,27 @@ func tituloExiste(titulo string) bool {
 	return existe
 }
 
-func listarID() []int {
+func listarID() []uint {
 	var livros []Livro
 	DB.Find(&livros)
-	setIds := make(map[int]struct{})
+	setIds := make(map[uint]struct{})
 	for _, livro := range livros {
-		setIds[int(livro.ID)] = struct{}{}
+		setIds[uint(livro.ID)] = struct{}{}
 	}
-	idUnicos := make([]int, 0, len(setIds))
+	idUnicos := make([]uint, 0, len(setIds))
 	for id := range setIds {
 		idUnicos = append(idUnicos, id)
 	}
 	return idUnicos
 }
 
-func buscarPorId(id uint) (Livro, error) {
-	var livroEncontrado Livro
-	res := DB.First(&livroEncontrado, id)
-	err := checarResultado(res)
-	if err != nil {
-		return Livro{}, err
+func buscarPorID(id uint) (*Livro, error) {
+	var livro Livro
+	if err := DB.First(&livro, id).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		return nil, err
 	}
-	return livroEncontrado, nil
+	return &livro, nil
 }

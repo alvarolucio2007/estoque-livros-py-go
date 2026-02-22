@@ -6,7 +6,7 @@ type Livro struct {
 	Autor      string  `json:"autor" gorm:"not null"`
 	Preco      float64 `json:"preco" gorm:"type:decimal(10,2)"`
 	Ano        int     `json:"ano"`
-	Quantidade int     `json:"quantidade"`
+	Quantidade uint    `json:"quantidade"`
 	Disponivel bool    `json:"disponivel" gorm:"default:true"`
 }
 type LivroCadastrar struct {
@@ -14,5 +14,5 @@ type LivroCadastrar struct {
 	Autor      string  `json:"autor" gorm:"not null"`
 	Preco      float64 `json:"preco" gorm:"type:decimal(10,2)"`
 	Ano        int     `json:"ano"`
-	Quantidade int     `json:"quantidade"`
+	Quantidade uint    `json:"quantidade"`
 }
