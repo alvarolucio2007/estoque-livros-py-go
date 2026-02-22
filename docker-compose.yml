@@ -1,27 +1,16 @@
 version: '3.8'
-
 services:
-  api:
-    build: .
-    container_name: estoque_api
-    volumes:
-      - .:/app
-    ports:
-      - "8000:8000"
+  db:
+    image: postgres:latest
+    container_name: postgres_go
     environment:
-      - PYTHONPATH=/app
-    command: uvicorn src.rotas_api:app --host 0.0.0.0 --port 8000 --reload
+      POSTGRES_USER: user_projeto
+      POSTGRES_PASSWORD: password_projeto
+      POSTGRES_DB: db_estoque
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/
 
-  front:
-    build: .
-    container_name: estoque_front
-    depends_on:
-      - api
-    volumes:
-      - .:/app
-    environment:
-      - API_URL=http://api:8000
-      - PYTHONPATH=/app
-    ports:
-      - "8501:8501"
-    command: streamlit run app.py --server.port=8501 --server.address=0.0.0.0
+volumes:
+  postgres_data:

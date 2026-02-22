@@ -96,9 +96,9 @@ class DataBase:
         encontrados = self.cursor.fetchall()
         return [Livro(*linha) for linha in encontrados]
 
-    def buscar_livros_titulo(self, autor: str) -> list[Livro]:
+    def buscar_livros_titulo(self, titulo: str) -> list[Livro]:
         comando = "SELECT * FROM livros WHERE titulo LIKE ?"
-        sql_valor: str = f"%{autor}"
+        sql_valor: str = f"%{titulo}"
         _ = self.cursor.execute(comando, (sql_valor,))
         encontrados = self.cursor.fetchall()
         livro_formatado = []
