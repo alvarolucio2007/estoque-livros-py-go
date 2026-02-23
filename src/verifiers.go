@@ -11,7 +11,7 @@ func verificarID(id uint) bool {
 	return slices.Contains(listarID(), id)
 }
 
-func cadastrarLivro(titulo string, autor string, preco float64, ano int, quantidade uint) error {
+func servicoAdicionarLivro(titulo string, autor string, preco float64, ano int, quantidade uint) error {
 	if titulo == "" {
 		return errors.New("título não pode ficar em branco")
 	}
@@ -42,6 +42,13 @@ func cadastrarLivro(titulo string, autor string, preco float64, ano int, quantid
 	return nil
 }
 
+func servicoDeletarLivro(id uint) error {
+	if id == 0 {
+		return errors.New("id não pode ser 0")
+	}
+	return deletarLivro(id)
+}
+
 func servicoAtualizarLivro(id uint, novosDados Livro) error {
 	livroExistente, err := buscarPorID(id)
 	if err != nil {
@@ -65,4 +72,25 @@ func servicoAtualizarLivro(id uint, novosDados Livro) error {
 		return fmt.Errorf("falha ao atualizar: %w", err)
 	}
 	return nil
+}
+
+func servicoBuscarLivroTitulo(titulo string) ([]Livro, error) {
+	if titulo == "" {
+		return nil, errors.New("título não pode ficar vazio")
+	}
+	return buscarLivroTitulo(titulo) // buscarLivroTitulo já retorna []Livro,nil então não precisa colocar nil
+}
+
+func servicoBuscarLivroAutor(autor string) ([]Livro, error) {
+	if autor == "" {
+		return nil, errors.New("autor não pode ficar vazio")
+	}
+	return buscarLivroAutor(autor) // buscarLivroAutor já retorna []Livro,nil então não precisa colocar nil
+}
+
+func servicoTituloExiste(titulo string) (bool, error) {
+	if titulo == "" {
+		return false, errors.New("titulo não pode ficar vazio")
+	}
+	return tituloExiste(titulo), nil
 }
