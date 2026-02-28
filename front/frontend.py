@@ -140,7 +140,6 @@ class FrontEnd:
                 )
         else:
             _ = st.warning(f"Nenhum produto encontrado com o código {busca}!")
-            
 
         with st.form("form_atualizar"):
             dados_atuais = ct.buscar_livro_codigo(busca) or {}
@@ -235,13 +234,15 @@ class FrontEnd:
 
     def renderizar_relatorios(self) -> None:
         _ = st.title("Relatórios de estoque dos livros")
-        livros = ct.gerar_relatorio()
-        if not livros:
+        relatorio = ct.gerar_relatorio()
+        if not relatorio:
             _ = st.info("Nenhum livro cadastrado para gerar relatórios.")
             return
-        relatorio = ct.gerar_relatorio()
         col1, col2, col3, col4 = st.columns(4)
         _ = col1.metric("Total de títulos", relatorio["total_livros"])
         _ = col2.metric("Livros disponíveis", relatorio["livros_disponiveis"])
         _ = col3.metric("Livros indisponíveis", relatorio["livros_indisponiveis"])
         _ = col4.metric("Valor total do estoque", relatorio["valor_total_estoque"])
+
+
+# TESTE!!!!!!!!!!!
