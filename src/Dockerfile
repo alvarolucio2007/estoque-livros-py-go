@@ -1,8 +1,13 @@
-# backend/Dockerfile
-FROM python:3.12.3-slim
+FROM golang:1.26.0 AS builder
 WORKDIR /app
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+COPY go.mod go.sum ./
+RUN go mod download
 COPY . .
-# A API roda na porta 8000
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+
+
+RUN CGO_ENABLED=0 GOOS=linux go build -o main
+
+FROM alpine:latest
+WORKDIR /app
+COPY --from=builder /app/main .
+CMD ["./main"]

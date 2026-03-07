@@ -1,7 +1,9 @@
 import pandas as pd
 import streamlit as st
-import front.clients as ct
+import clients as ct
 import os
+
+import datetime
 
 API_URL = os.getenv("API_URL", "http://localhost:8000")
 
@@ -127,7 +129,7 @@ class FrontEnd:
 
     def renderizar_atualizar(self) -> None:
         _ = st.markdown("Atualização de Produto")
-        busca = st.number_input("Qual seria o código?", min_value=0, step=1)
+        busca = st.number_input("Qual seria o código?", min_value=1, step=1)
         dados = {}
         if busca in ct.listar_id():
             resultados = [ct.buscar_livro_codigo(busca)]
@@ -161,6 +163,7 @@ class FrontEnd:
                         "Ano de lançamento",
                         value=dados_atuais.get("ano", ""),
                         min_value=0,
+                        max_value=datetime.datetime.now().year + 1,
                         format="%d",
                         step=1,
                     )

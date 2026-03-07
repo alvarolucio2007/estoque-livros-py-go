@@ -3,4 +3,3 @@ pandas
 streamlit
 uvicorn
 fastapi
-requests

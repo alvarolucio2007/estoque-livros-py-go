@@ -43,7 +43,7 @@ func setupAPI() {
 		if err != nil {
 			c.JSON(400, gin.H{"error": "o id deve ser um número válido"})
 		}
-		resultado, err := servicoBuscarLivroId(uint(idUint))
+		resultado, err := servicoBuscarLivroID(uint(idUint))
 		if err != nil {
 			c.JSON(500, gin.H{"error": "erro ao procurar livro por id"})
 			return
@@ -115,7 +115,7 @@ func setupAPI() {
 		c.JSON(200, "livro deletado com sucesso")
 	})
 
-	err := r.Run("localhost:8000")
+	err := r.Run(":8000")
 	if err != nil {
 		return
 	}

@@ -12,7 +12,7 @@ import (
 var DB *gorm.DB
 
 func ConectarBanco() {
-	dsn := "host=localhost user=user_projeto password=password_projeto dbname=db_estoque port=5432 sslmode=disable"
+	dsn := "host=db user=user password=password dbname=estoque_db port=5432 sslmode=disable"
 	var err error
 	DB, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
@@ -25,8 +25,9 @@ func ConectarBanco() {
 	}
 }
 
-func (l *Livro) AntesSalvar(tx *gorm.DB) (err error) {
-	l.Disponivel = l.Quantidade > 0
+func (l *Livro) BeforeSave(tx *gorm.DB) (err error) {
+	status := l.Quantidade > 0
+	l.Disponivel = &status
 	return nil
 }
 
@@ -58,7 +59,14 @@ func carregarDados() ([]Livro, error) {
 }
 
 func deletarLivro(id uint) error {
-	return checarResultado(DB.Delete(&Livro{}, id))
+	resultado := DB.Delete(&Livro{}, id)
+	if resultado.Error != nil {
+		return resultado.Error
+	}
+	if resultado.RowsAffected == 0 {
+		return errors.New("livro não encontrado")
+	}
+	return nil
 }
 
 func atualizarLivro(id uint, dados Livro) error {
@@ -99,15 +107,6 @@ func gerarRelatorio() (map[string]any, error) {
 		"livros_indisponiveis": indisponiveis,
 		"valor_total_estoque":  valorTotal,
 	}, nil
-}
-
-func tituloExiste(titulo string) bool {
-	var existe bool
-	err := DB.Model(&Livro{}).Select("count(*)>0").Where("Lower(titulo)=LOWER(?)", titulo).Find(&existe).Error
-	if err != nil {
-		return false
-	}
-	return existe
 }
 
 func listarID() []uint {

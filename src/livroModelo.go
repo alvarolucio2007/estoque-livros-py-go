@@ -7,7 +7,7 @@ type Livro struct {
 	Preco      float64 `json:"preco" gorm:"type:decimal(10,2)"`
 	Ano        int     `json:"ano"`
 	Quantidade uint    `json:"quantidade"`
-	Disponivel bool    `json:"disponivel" gorm:"default:true"`
+	Disponivel *bool   `json:"disponivel" gorm:"default:true"`
 }
 type LivroCadastrar struct {
 	Titulo     string  `json:"titulo" gorm:"not null"`

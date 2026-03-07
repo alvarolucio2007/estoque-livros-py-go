@@ -1,5 +1,5 @@
 import streamlit as st
-from front.frontend import FrontEnd
+from frontend import FrontEnd
 
 
 def main():

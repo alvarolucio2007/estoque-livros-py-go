@@ -1,16 +1,40 @@
-version: '3.8'
 services:
   db:
-    image: postgres:latest
-    container_name: postgres_go
+    image: postgres:15-alpine
+    restart: always
     environment:
-      POSTGRES_USER: user_projeto
-      POSTGRES_PASSWORD: password_projeto
-      POSTGRES_DB: db_estoque
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: estoque_db
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d estoque_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
     ports:
       - "5432:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/
+      - postgres_data:/var/lib/postgresql/data
+
+  backend:
+    build: ./src
+    restart: always
+    depends_on:
+      db:
+        condition: service_healthy # Só sobe o Go quando o DB estiver pronto
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+    ports:
+      - "8080:8080"
+
+  frontend:
+    build: ./front
+    restart: always
+    depends_on:
+      - backend
+    ports:
+      - "8501:8501"
 
 volumes:
   postgres_data:

@@ -27,7 +27,7 @@ func servicoAdicionarLivro(titulo string, autor string, preco float64, ano int, 
 		Preco:      preco,
 		Ano:        ano,
 		Quantidade: quantidade,
-		Disponivel: disponivel,
+		Disponivel: &disponivel,
 		// O ID você não precisa passar se ele for AutoIncrement
 
 	}
@@ -58,7 +58,10 @@ func servicoAtualizarLivro(id uint, novosDados Livro) error {
 	if novosDados.Ano > time.Now().Year()+1 {
 		return errors.New("ano inválido")
 	}
-	novosDados.Disponivel = novosDados.Quantidade > 0
+
+	status := novosDados.Quantidade > 0
+	novosDados.Disponivel = &status
+
 	err = atualizarLivro(id, novosDados)
 	if err != nil {
 		return fmt.Errorf("falha ao atualizar: %w", err)
@@ -80,14 +83,7 @@ func servicoBuscarLivroAutor(autor string) ([]Livro, error) {
 	return buscarLivroAutor(autor) // buscarLivroAutor já retorna []Livro,nil então não precisa colocar nil
 }
 
-func servicoTituloExiste(titulo string) (bool, error) {
-	if titulo == "" {
-		return false, errors.New("titulo não pode ficar vazio")
-	}
-	return tituloExiste(titulo), nil
-}
-
-func servicoBuscarLivroId(id uint) (*Livro, error) {
+func servicoBuscarLivroID(id uint) (*Livro, error) {
 	if id == 0 {
 		return nil, errors.New("id não pode ser 0")
 	}
