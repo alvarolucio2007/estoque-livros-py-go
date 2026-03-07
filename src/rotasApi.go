@@ -8,7 +8,10 @@ import (
 )
 
 func setupAPI() {
+	gin.SetMode(gin.ReleaseMode)
 	r := gin.Default()
+	r.Use(gin.Logger())
+	r.Use(gin.Recovery())
 	config := cors.Config{
 		AllowOrigins:     []string{"http://localhost:8501"},
 		AllowMethods:     []string{"GET", "POST", "PATCH", "DELETE", "PUT"},
