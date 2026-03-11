@@ -29,7 +29,6 @@ func servicoAdicionarLivro(titulo string, autor string, preco float64, ano int, 
 		Quantidade: quantidade,
 		Disponivel: &disponivel,
 		// O ID você não precisa passar se ele for AutoIncrement
-		// teste
 	}
 	return adicionarLivro(novoLivro)
 }
