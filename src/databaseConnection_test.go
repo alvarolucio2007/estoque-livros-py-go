@@ -88,7 +88,7 @@ func TestIntegracaoPostgres(t *testing.T) {
 		}
 		listaLivros, err = buscarLivroTitulo(recebido.Titulo)
 		if err != nil {
-			t.Error("log: erro interno na função buscarLivroTitulo")
+			t.Error("log: erro interno na função buscarLivroTitulo", err)
 		}
 		if listaLivros[0].Titulo != recebido.Titulo {
 			t.Error("log: busca errada por título")
