@@ -1,113 +1,138 @@
 package main
 
 import (
-	"context"
-	"os"
 	"testing"
-	"time"
-
-	"github.com/testcontainers/testcontainers-go"
-	"github.com/testcontainers/testcontainers-go/modules/postgres"
-	"github.com/testcontainers/testcontainers-go/wait"
 )
 
-func TestIntegracaoPostgres(t *testing.T) {
-	ctx := context.Background()
-	dbName := "db_estoque_test"
-	dbUser := "user"
-	dbPass := "password"
-	container, err := postgres.RunContainer(ctx, testcontainers.WithImage("postgres:18-alpine"),
-		postgres.WithDatabase(dbName),
-		postgres.WithUsername(dbUser),
-		postgres.WithPassword(dbPass),
-		testcontainers.WithWaitStrategy(wait.ForLog("database system is ready to accept connections").WithOccurrence(2).WithStartupTimeout(5*time.Second)),
-	)
-	if err != nil {
-		t.Fatal("Falha ao subir o container:", err)
-	}
-	defer func() {
-		if err := container.Terminate(ctx); err != nil {
-			t.Fatalf("Falha ao parar o container: %s", err)
-		}
-	}()
-	connStr, err := container.ConnectionString(ctx, "sslmode=disable")
-	if err != nil {
-		t.Fatal(err)
-	}
-	t.Run("Testar conexão e create", func(t *testing.T) {
-		os.Setenv("DATABASE_URL", connStr)
-		ConectarBanco()
-		DB.AutoMigrate(&Livro{})
-		disponivel := true
-		livroTeste := Livro{Titulo: "Teste", Autor: "autorTeste", Preco: 999, Ano: 1500, Quantidade: 150, Disponivel: &disponivel}
-		err := adicionarLivro(livroTeste)
-		if err != nil {
-			t.Error("Livro não salvo")
-		}
-		listaLivros, err := carregarDados()
-		recebido := listaLivros[0]
-		esperado := livroTeste
-		recebido.ID = 0
-		if *recebido.Disponivel != *esperado.Disponivel {
-			t.Error("Disponibilidade errada")
-		}
-		recebido.Disponivel = esperado.Disponivel
-		if recebido != esperado {
-			t.Errorf("Ainda há diferenças! Recebido %+v, Esperado: %+v", recebido, esperado)
-		}
-		if err != nil {
-			t.Error("log: erro interno ao carregar dados:", err)
-		}
-		if len(listaLivros) == 0 {
-			t.Error("A lista está vazia, esperava 1 livro.")
-		}
+var livroExemplo = Livro{
+	Titulo:     "Teste",
+	Autor:      "autorTeste",
+	Preco:      999,
+	Ano:        1500,
+	Quantidade: 150,
+}
 
-		livroTeste = Livro{Titulo: "Teste2", Autor: "autorTeste2", Preco: 9992, Ano: 1502, Quantidade: 152, Disponivel: &disponivel}
-		err = atualizarLivro(1, livroTeste)
-		if err != nil {
-			t.Errorf("log: erro ao atualizar livro, %v", err)
-		}
-		listaLivros, _ = carregarDados()
-		recebido = listaLivros[0]
-		esperado = livroTeste
-		if esperado.Titulo != recebido.Titulo {
-			t.Error("log: titulo nao editado")
-		}
-		if esperado.Autor != recebido.Autor {
-			t.Error("log: autor nao editado")
-		}
-		if esperado.Ano != recebido.Ano {
-			t.Error("log: ano não editado")
-		}
-		if esperado.Quantidade != recebido.Quantidade {
-			t.Error("log: quantidade não editada")
-		}
-		listaID := listarID()
-		if len(listaID) != 1 {
-			t.Error("log: quantidade de IDs inesperada, esperado: %i, atual: %i", 1, len(listaID))
-		}
-		listaLivros, err = buscarLivroTitulo(recebido.Titulo)
-		if err != nil {
-			t.Error("log: erro interno na função buscarLivroTitulo", err)
-		}
-		if listaLivros[0].Titulo != recebido.Titulo {
-			t.Error("log: busca errada por título")
-		}
-		listaLivros, err = buscarLivroAutor(recebido.Autor)
-		if err != nil {
-			t.Errorf("log: erro interno na função buscarLivroAutor %v", err)
-		}
-		if listaLivros[0].Titulo != recebido.Titulo {
-			t.Error("log: busca errada por autor")
-		}
-
-		err = deletarLivro(1)
-		if err != nil {
-			t.Error("Erro interno!")
-		}
-		listaLivros, _ = carregarDados()
-		if len(listaLivros) != 0 {
-			t.Error("Livro não foi apagado!")
-		}
+func TestFluxoCompleto(t *testing.T) {
+	t.Run("Adicionar", func(t *testing.T) {
+		testarAdicionarLivro(t)
 	})
+	t.Run("Carregar", func(t *testing.T) {
+		testarCarregarDados(t)
+	})
+	t.Run("ChecarID", func(t *testing.T) {
+		testarListarID(t)
+	})
+	t.Run("Editar", func(t *testing.T) {
+		testarEditarLivro(t)
+	})
+	t.Run("Buscar", func(t *testing.T) {
+		testarBuscarLivroTitulo(t)
+		testarBuscarLivroAutor(t)
+	})
+	t.Run("Deletar", func(t *testing.T) {
+		testarDeletarLivro(t)
+	})
+}
+
+func testarAdicionarLivro(t *testing.T) {
+	disponivel := true
+	livroExemplo.Disponivel = &disponivel
+	err := adicionarLivro(livroExemplo)
+	if err != nil {
+		t.Errorf("Livro não salvo: %v", err)
+	}
+}
+
+func testarCarregarDados(t *testing.T) {
+	listaLivros, err := carregarDados()
+	if err != nil {
+		t.Fatalf("Erro ao carregar dados: %v", err)
+	}
+	if len(listaLivros) == 0 {
+		t.Fatal("A lista está vazia, esperava 1 livro.")
+	}
+	recebido := listaLivros[0]
+	esperado := livroExemplo
+	recebido.ID = 0
+	if *recebido.Disponivel != *esperado.Disponivel {
+		t.Error("Disponibilidade errada")
+	}
+	recebido.Disponivel = esperado.Disponivel
+	if recebido != esperado {
+		t.Errorf("Ainda há diferenças. \nRecebido: %+v\nEsperado: %+v", recebido, esperado)
+	}
+}
+
+func testarEditarLivro(t *testing.T) {
+	disponivel := true
+	livroEdicao := Livro{Titulo: "Teste2", Autor: "autorTeste2", Preco: 9992, Ano: 1502, Quantidade: 152, Disponivel: &disponivel}
+	err := atualizarLivro(1, livroEdicao)
+	if err != nil {
+		t.Fatalf("log: erro ao atualizar livro, %v", err)
+	}
+	listaLivros, err := carregarDados()
+	if err != nil || len(listaLivros) == 0 {
+		t.Fatal("log: erro ao carregar dados após edição")
+	}
+	recebido := listaLivros[0]
+	if livroEdicao.Titulo != recebido.Titulo {
+		t.Error("log: titulo nao editado")
+	}
+	if livroEdicao.Autor != recebido.Autor {
+		t.Error("log: autor nao editado")
+	}
+	if livroEdicao.Ano != recebido.Ano {
+		t.Error("log: ano não editado")
+	}
+	if livroEdicao.Quantidade != recebido.Quantidade {
+		t.Error("log: quantidade não editada")
+	}
+	if *livroEdicao.Disponivel != *recebido.Disponivel {
+		t.Error("log: disponivel não editado")
+	}
+	livroExemplo = livroEdicao
+}
+
+func testarListarID(t *testing.T) {
+	listaID := listarID()
+	if len(listaID) != 1 {
+		t.Error("log: quantidade de IDs inesperada, esperado: %i, atual: %i", 1, len(listaID))
+	}
+}
+
+func testarBuscarLivroTitulo(t *testing.T) {
+	listaLivros, err := buscarLivroTitulo(livroExemplo.Titulo)
+	if err != nil {
+		t.Fatalf("log: erro interno na função buscarLivroTitulo: %v", err)
+	}
+	if len(listaLivros) == 0 {
+		t.Fatal("log: busca não encontrou nenhum livro")
+	}
+	if listaLivros[0].Titulo != livroExemplo.Titulo {
+		t.Error("log: busca errada por título")
+	}
+}
+
+func testarBuscarLivroAutor(t *testing.T) {
+	listaLivros, err := buscarLivroAutor(livroExemplo.Autor)
+	if err != nil {
+		t.Fatalf("log: erro interno na função buscarLivroAutor %v", err)
+	}
+	if len(listaLivros) == 0 {
+		t.Fatal("log: busca nao encontrou livro algum")
+	}
+	if listaLivros[0].Autor != livroExemplo.Autor {
+		t.Errorf("log: busca errada por autor\nEsperado: %+v\nRecebido: %+v", livroExemplo, listaLivros[0])
+	}
+}
+
+func testarDeletarLivro(t *testing.T) {
+	err := deletarLivro(1)
+	if err != nil {
+		t.Fatalf("Erro interno: %v", err)
+	}
+	listaLivros, _ := carregarDados()
+	if len(listaLivros) != 0 {
+		t.Error("Livro não foi apagado!")
+	}
 }
