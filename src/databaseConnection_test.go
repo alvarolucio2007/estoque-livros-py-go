@@ -29,6 +29,9 @@ func TestFluxoCompleto(t *testing.T) {
 		testarBuscarLivroTitulo(t)
 		testarBuscarLivroAutor(t)
 	})
+	t.Run("Relatório", func(t *testing.T) {
+		testarRelatorio(t)
+	})
 	t.Run("Deletar", func(t *testing.T) {
 		testarDeletarLivro(t)
 	})
@@ -134,5 +137,24 @@ func testarDeletarLivro(t *testing.T) {
 	listaLivros, _ := carregarDados()
 	if len(listaLivros) != 0 {
 		t.Error("Livro não foi apagado!")
+	}
+}
+
+func testarRelatorio(t *testing.T) {
+	relatorio, err := gerarRelatorio()
+	if err != nil {
+		t.Fatalf("Erro ao gerar relatório: %v", err)
+	}
+	if relatorio["total_livros"].(int64) != 1 {
+		t.Error("log: relatório não retornou 1 total_livros")
+	}
+	if relatorio["livros_disponiveis"].(int64) != 1 {
+		t.Error("log: relatório não retornou 1 livros_disponiveis")
+	}
+	if relatorio["livros_indisponiveis"].(int64) != 0 {
+		t.Error("log: relatório não retornou 0 lívros_indisponiveis")
+	}
+	if relatorio["valor_total_estoque"].(float64) != 1518784 {
+		t.Errorf("Valor total esperado: 1518784, valor dado: %.2f", relatorio["valor_total_estoque"])
 	}
 }
