@@ -1,7 +1,10 @@
 package main
 
-import "fmt"
+import "testing"
 
-func teste() {
-	fmt.Println("AAAA")
+func TestVerificadorCompleto(t *testing.T) {
+
 }
+var listaLivroExemplos=[]Livro(
+{}
+	)
