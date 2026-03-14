@@ -12,7 +12,7 @@ var livroExemplo = Livro{
 	Quantidade: 150,
 }
 
-func TestFluxoCompleto(t *testing.T) {
+func TestDatabaseConnection(t *testing.T) {
 	t.Run("Adicionar", func(t *testing.T) {
 		testarAdicionarLivro(t)
 	})

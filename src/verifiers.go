@@ -51,6 +51,9 @@ func servicoAtualizarLivro(id uint, novosDados Livro) error {
 	if novosDados.Titulo == "" {
 		return errors.New("título não pode ficar vazio")
 	}
+	if novosDados.Autor == "" {
+		return errors.New("autor não pode ficar vazio")
+	}
 	if novosDados.Preco < 0 {
 		return errors.New("o preco nao pode ser negativo")
 	}
