@@ -14,7 +14,7 @@ var DB *gorm.DB
 
 func ConectarBanco() {
 	dsn := os.Getenv("DATABASE_URL")
-	if dsn==""{
+	if dsn == "" {
 		dsn = "host=db user=user password=password dbname=estoque_db port=5432 sslmode=disable"
 	}
 	var err error
@@ -131,7 +131,7 @@ func buscarPorID(id uint) (*Livro, error) {
 	var livro Livro
 	if err := DB.First(&livro, id).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, nil
+			return nil, errors.New("livro não encontrado")
 		}
 		return nil, err
 	}

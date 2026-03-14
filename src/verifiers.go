@@ -75,7 +75,7 @@ func servicoBuscarLivroTitulo(titulo string) ([]Livro, error) {
 	if titulo == "" {
 		return nil, errors.New("título não pode ficar vazio")
 	}
-	return buscarLivroTitulo(titulo) // buscarLivroTitulo já retorna []Livro,nil então não precisa colocar nil
+	return buscarLivroTitulo(titulo) // buscarLivroTitulo já retorna []Livro,error então não precisa colocar nil
 }
 
 func servicoBuscarLivroAutor(autor string) ([]Livro, error) {

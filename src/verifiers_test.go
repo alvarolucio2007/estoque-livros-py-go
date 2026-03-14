@@ -7,9 +7,20 @@ func TestVerifiers(t *testing.T) {
 		testarServicoAdicionarLivro(t)
 	})
 	t.Run("verifierDeletar", func(t *testing.T) {
-		servicoAdicionarLivro("AA", "BB", 100, 2007, 20)
 		testarServicoDeletarLivro(t)
 	})
+	t.Run("verifierEditar", func(t *testing.T) {
+		testarServicoAtualizarLivro(t)
+	})
+	t.Run("verifierBuscarTitulo", func(t *testing.T) {
+		testarServicoBuscarLivroTitulo(t)
+	})
+}
+
+func criarLivroTeste() Livro {
+	livro := Livro{Titulo: "Livro de Teste", Autor: "Autor Teste", Preco: 120, Quantidade: 100, Ano: 1984}
+	DB.Create(&livro)
+	return livro
 }
 
 var mapLivroTeste = map[string]struct {
@@ -45,8 +56,7 @@ var mapIDTeste = map[string]struct {
 }
 
 func testarServicoDeletarLivro(t *testing.T) {
-	livroParaDeletar := Livro{Titulo: "Livro de Teste", Autor: "Autor Teste"}
-	DB.Create(&livroParaDeletar)
+	livroParaDeletar := criarLivroTeste()
 	mapIDTeste["Não retorna erro"] = struct {
 		ID         uint
 		esperaErro bool
@@ -67,12 +77,45 @@ var mapLivroEditarTeste = map[string]struct {
 	livro      Livro
 	esperaErro bool
 }{
-	"Normal": {id: 1, livro: Livro{Livro{Titulo: "Normal", Autor: "Normal", Preco: 100, Ano: 1984, Quantidade: 20}, esperaErro: false}},
+	"Normal":       {id: 1, livro: Livro{Titulo: "Normal", Autor: "Normal", Preco: 100, Ano: 1984, Quantidade: 20}, esperaErro: false},
 	"Sem titulo":   {id: 2, livro: Livro{Titulo: "", Autor: "Normal", Preco: 100, Ano: 1984, Quantidade: 20}, esperaErro: true},
 	"Sem Autor":    {id: 3, livro: Livro{Titulo: "Sem autor", Autor: "", Preco: 100, Ano: 1984, Quantidade: 20}, esperaErro: true},
 	"Preço errado": {id: 4, livro: Livro{Titulo: "Preço errado", Autor: "Preço errado", Preco: -100, Ano: 1984, Quantidade: 20}, esperaErro: true},
 	"Ano errado":   {id: 5, livro: Livro{Titulo: "Ano errado", Autor: "Ano errado", Preco: 100, Ano: 9000, Quantidade: 20}, esperaErro: true},
-	},
+}
 
 func testarServicoAtualizarLivro(t *testing.T) {
+	livroParaEditar := criarLivroTeste()
+	for nome, tc := range mapLivroEditarTeste {
+		t.Run(nome, func(t *testing.T) {
+			err := servicoAtualizarLivro(livroParaEditar.ID, tc.livro)
+			if (err != nil) != tc.esperaErro {
+				t.Errorf("[%s] Resultado inesperado: erro recebido = %v, esperava erro? %v",
+					nome, err, tc.esperaErro)
+			}
+		})
+	}
+}
+
+var mapLivroBuscar = map[string]struct {
+	Título     string
+	esperaErro bool
+}{
+	"Normal":        {Título: "Livro de Teste", esperaErro: false},
+	"Título vazio":  {Título: "", esperaErro: true},
+	"Título errado": {Título: "AAAAAAAAAAA", esperaErro: true},
+}
+
+func testarServicoBuscarLivroTitulo(t *testing.T) {
+	livroExemplo := criarLivroTeste()
+	for nome, tc := range mapLivroBuscar {
+		t.Run(nome, func(t *testing.T) {
+			_, err := servicoBuscarLivroTitulo(livroExemplo.Titulo)
+
+			if (err != nil) != tc.esperaErro {
+				t.Errorf("[%s] Resultado inesperado: erro recebido = %v, esperava erro? %v",
+					nome, err, tc.esperaErro)
+			}
+		})
+	}
 }
