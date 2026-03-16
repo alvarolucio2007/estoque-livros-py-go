@@ -1,4 +1,4 @@
-// Verifica regras de negócio.
+// Package verifiers verifica regras de negócio.
 package verifiers
 
 import (

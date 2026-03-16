@@ -1,3 +1,4 @@
+// Package routes faz as rotas da API para conectar ao Streamlit Python
 package routes
 
 import (
