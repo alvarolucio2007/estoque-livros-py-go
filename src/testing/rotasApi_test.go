@@ -47,3 +47,9 @@ func testarHandlerCarregarLivros(t *testing.T) {
 		t.Errorf("esperava status 200,recebi %d", w.Code)
 	}
 }
+
+func testarHandlerListarID(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	r := gin.Default()
+	r.GET("/livros/listar_id", testarHandlerListarID)
+}

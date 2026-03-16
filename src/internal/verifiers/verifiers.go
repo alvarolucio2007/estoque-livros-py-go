@@ -82,7 +82,7 @@ func ServicoBuscarLivroTitulo(titulo string) ([]models.Livro, error) {
 	return database.BuscarLivroTitulo(titulo) // buscarLivroTitulo já retorna []Livro,error então não precisa colocar nil
 }
 
-func servicoBuscarLivroAutor(autor string) ([]models.Livro, error) {
+func ServicoBuscarLivroAutor(autor string) ([]models.Livro, error) {
 	if autor == "" {
 		return nil, errors.New("autor não pode ficar vazio")
 	}

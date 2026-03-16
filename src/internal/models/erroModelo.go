@@ -11,8 +11,13 @@ var (
 )
 
 // Erros exclusivos verifiers
+
+// Erros exclusivos API
 var (
-	ErrIDNuloVR = errors.New("o ID não pode ser 0")
+	ErrGerarRelatorioAPI = errors.New("erro ao gerar relatorio")
+	ErrSintaxeJSONAPI    = errors.New("erro de sintaxe no JSON da api")
+	ErrTipagemJSONAPI    = errors.New("erro de tipagem no JSON da api")
+	ErrValidacaoJSONAPI  = errors.New("erro de validacao no JSON da api")
 )
 
 // Erros Universais
@@ -23,4 +28,5 @@ var (
 	ErrAnoInvalido        = errors.New("o ano é inválido")
 	ErrEstoquevazio       = errors.New("quantidade deve ser informada")
 	ErrLivroNaoEncontrado = errors.New("nenhum livro encontrado")
+	ErrIDNulo             = errors.New("o ID precisa ser válido")
 )

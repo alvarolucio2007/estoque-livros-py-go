@@ -12,7 +12,7 @@ import (
 )
 
 func SetupAPI() {
-	gin.SetMode(gin.ReleaseMode)
+	gin.SetMode(gin.DebugMode)
 	r := gin.Default()
 	r.Use(gin.Logger())
 	r.Use(gin.Recovery())
@@ -27,7 +27,8 @@ func SetupAPI() {
 	r.GET("/livros", func(c *gin.Context) {
 		livros, err := database.CarregarDados()
 		if err != nil {
-			c.JSON(500, gin.H{"error": "Erro ao ler banco de dados"})
+			status, resposta := ErrorHandler(err)
+			c.JSON(status, resposta)
 			return
 		}
 		c.JSON(200, livros)
@@ -39,7 +40,8 @@ func SetupAPI() {
 	r.GET("/livros/relatorio", func(c *gin.Context) {
 		resultado, err := database.GerarRelatorio()
 		if err != nil {
-			c.JSON(500, gin.H{"error": "erro ao gerar relatorio"})
+			status, resposta := ErrorHandler(err)
+			c.JSON(status, resposta)
 			return
 		}
 		c.JSON(200, resultado)
@@ -48,11 +50,13 @@ func SetupAPI() {
 		idStr := c.Param("livro_id")
 		idUint, err := strconv.ParseUint(idStr, 10, 64)
 		if err != nil {
-			c.JSON(400, gin.H{"error": "o id deve ser um número válido"})
+			c.JSON(400, gin.H{"error": err.Error()})
+			return
 		}
 		resultado, err := verifiers.ServicoBuscarLivroID(uint(idUint))
 		if err != nil {
-			c.JSON(500, gin.H{"error": "erro ao procurar livro por id"})
+			status, resposta := ErrorHandler(err)
+			c.JSON(status, resposta)
 			return
 		}
 		c.JSON(200, resultado)
@@ -61,16 +65,18 @@ func SetupAPI() {
 		tituloStr := c.Param("titulo")
 		resultado, err := verifiers.ServicoBuscarLivroTitulo(tituloStr)
 		if err != nil {
-			c.JSON(500, gin.H{"error": "erro ao procurar livro por título"})
+			status, resposta := ErrorHandler(err)
+			c.JSON(status, resposta)
 			return
 		}
 		c.JSON(200, resultado)
 	})
 	r.GET("/livros/autor/:autor", func(c *gin.Context) {
 		tituloStr := c.Param("autor")
-		resultado, err := verifiers.ServicoBuscarLivroTitulo(tituloStr)
+		resultado, err := verifiers.ServicoBuscarLivroAutor(tituloStr)
 		if err != nil {
-			c.JSON(500, gin.H{"error": "erro ao procurar livro por autor"})
+			status, resposta := ErrorHandler(err)
+			c.JSON(status, resposta)
 			return
 		}
 		c.JSON(200, resultado)
@@ -78,12 +84,14 @@ func SetupAPI() {
 	r.POST("/livros", func(c *gin.Context) {
 		var novoLivro models.LivroCadastrar
 		if err := c.ShouldBindJSON(&novoLivro); err != nil {
-			c.JSON(400, gin.H{"error": "JSON inválido: " + err.Error()})
+			status, resposta := ErrorHandler(err)
+			c.JSON(status, resposta)
 			return
 		}
 		err := verifiers.ServicoAdicionarLivro(novoLivro.Titulo, novoLivro.Autor, novoLivro.Preco, novoLivro.Ano, novoLivro.Quantidade)
 		if err != nil {
-			c.JSON(500, gin.H{"error": "erro ao salvar no banco"})
+			status, resposta := ErrorHandler(err)
+			c.JSON(status, resposta)
 			return
 		}
 		c.JSON(201, "criado com sucesso")
@@ -92,17 +100,18 @@ func SetupAPI() {
 		idStr := c.Param("id")
 		idUint, err := strconv.ParseUint(idStr, 10, 64)
 		if err != nil {
-			c.JSON(400, gin.H{"mensagem": "Não foi possível atualizar", "codigo": 400})
+			c.JSON(500, gin.H{"error": err.Error()})
 			return
 		}
 		var dadosAtualizados models.Livro
 		if err := c.ShouldBindJSON(&dadosAtualizados); err != nil {
-			c.JSON(404, models.RespostaErro{Mensagem: "livro não encontrado"})
+			c.JSON(404, models.RespostaErro{Mensagem: err.Error()})
 			return
 		}
 		err = verifiers.ServicoAtualizarLivro(uint(idUint), dadosAtualizados)
 		if err != nil {
-			c.JSON(500, models.RespostaErro{Mensagem: "falha ao atualizar livro", Detalhe: err.Error()})
+			status, resposta := ErrorHandler(err)
+			c.JSON(status, resposta)
 			return
 		}
 		c.JSON(200, dadosAtualizados)
@@ -111,12 +120,13 @@ func SetupAPI() {
 		idStr := c.Param("id")
 		idUint, err := strconv.ParseUint(idStr, 10, 64)
 		if err != nil {
-			c.JSON(400, gin.H{"error": "o id deve ser um número válido"})
+			c.JSON(400, gin.H{"error": err.Error()})
 			return
 		}
 		err = verifiers.ServicoDeletarLivro(uint(idUint))
 		if err != nil {
-			c.JSON(500, gin.H{"error": "erro ao deletar livro"})
+			status, resposta := ErrorHandler(err)
+			c.JSON(status, resposta)
 			return
 		}
 		c.JSON(200, "livro deletado com sucesso")
