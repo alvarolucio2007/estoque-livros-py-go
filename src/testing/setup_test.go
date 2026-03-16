@@ -7,6 +7,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/alvarolucio2007/estoque-livros-py/src/internal/database"
+	"github.com/alvarolucio2007/estoque-livros-py/src/internal/models"
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/modules/postgres"
 	"github.com/testcontainers/testcontainers-go/wait"
@@ -48,8 +50,8 @@ func TestMain(m *testing.M) {
 	}
 
 	// 4. Conecta o seu banco global e cria as tabelas
-	ConectarBanco()
-	err = DB.AutoMigrate(&Livro{})
+	database.ConectarBanco()
+	err = database.DB.AutoMigrate(&models.Livro{})
 	if err != nil {
 		log.Fatal(err)
 	}

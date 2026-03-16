@@ -2,6 +2,10 @@ package test
 
 import (
 	"testing"
+
+	"github.com/alvarolucio2007/estoque-livros-py/src/internal/database"
+	"github.com/alvarolucio2007/estoque-livros-py/src/internal/models"
+	"github.com/alvarolucio2007/estoque-livros-py/src/internal/verifiers"
 )
 
 func TestVerifiers(t *testing.T) {
@@ -25,23 +29,23 @@ func TestVerifiers(t *testing.T) {
 	})
 }
 
-func criarLivroTeste(t *testing.T) Livro {
-	livro := Livro{Titulo: "Livro de Teste", Autor: "Autor Teste", Preco: 120, Quantidade: 100, Ano: 1984}
-	if err := DB.Create(&livro).Error; err != nil {
+func criarLivroTeste(t *testing.T) models.Livro {
+	livro := models.Livro{Titulo: "Livro de Teste", Autor: "Autor Teste", Preco: 120, Quantidade: 100, Ano: 1984}
+	if err := database.DB.Create(&livro).Error; err != nil {
 		t.Fatalf("Erro ao criar livro teste: %v", err)
 	}
 	return livro
 }
 
 var mapLivroTeste = map[string]struct {
-	livro      Livro
+	livro      models.Livro
 	esperaErro bool
 }{
-	"Normal":       {livro: Livro{Titulo: "Normal", Autor: "Normal", Preco: 100, Ano: 1984, Quantidade: 20}, esperaErro: false},
-	"Sem titulo":   {livro: Livro{Titulo: "", Autor: "Normal", Preco: 100, Ano: 1984, Quantidade: 20}, esperaErro: true},
-	"Sem Autor":    {livro: Livro{Titulo: "Sem autor", Autor: "", Preco: 100, Ano: 1984, Quantidade: 20}, esperaErro: true},
-	"Preço errado": {livro: Livro{Titulo: "Preço errado", Autor: "Preço errado", Preco: -100, Ano: 1984, Quantidade: 20}, esperaErro: true},
-	"Ano errado":   {livro: Livro{Titulo: "Ano errado", Autor: "Ano errado", Preco: 100, Ano: 9000, Quantidade: 20}, esperaErro: true},
+	"Normal":       {livro: models.Livro{Titulo: "Normal", Autor: "Normal", Preco: 100, Ano: 1984, Quantidade: 20}, esperaErro: false},
+	"Sem titulo":   {livro: models.Livro{Titulo: "", Autor: "Normal", Preco: 100, Ano: 1984, Quantidade: 20}, esperaErro: true},
+	"Sem Autor":    {livro: models.Livro{Titulo: "Sem autor", Autor: "", Preco: 100, Ano: 1984, Quantidade: 20}, esperaErro: true},
+	"Preço errado": {livro: models.Livro{Titulo: "Preço errado", Autor: "Preço errado", Preco: -100, Ano: 1984, Quantidade: 20}, esperaErro: true},
+	"Ano errado":   {livro: models.Livro{Titulo: "Ano errado", Autor: "Ano errado", Preco: 100, Ano: 9000, Quantidade: 20}, esperaErro: true},
 }
 
 func testarServicoAdicionarLivro(t *testing.T) {
@@ -49,7 +53,7 @@ func testarServicoAdicionarLivro(t *testing.T) {
 
 	for nome, tc := range mapLivroTeste {
 		t.Run(nome, func(t *testing.T) {
-			err := servicoAdicionarLivro(tc.livro.Titulo, tc.livro.Autor, tc.livro.Preco, tc.livro.Ano, tc.livro.Quantidade)
+			err := verifiers.ServicoAdicionarLivro(tc.livro.Titulo, tc.livro.Autor, tc.livro.Preco, tc.livro.Ano, tc.livro.Quantidade)
 			if (err != nil) != tc.esperaErro {
 				t.Errorf("[%s] Resultado inesperado: erro recebido = %v, esperava erro? %v",
 					nome, err, tc.esperaErro)
@@ -75,7 +79,7 @@ func testarServicoDeletarLivro(t *testing.T) {
 	}{ID: livroParaDeletar.ID, esperaErro: false}
 	for nome, tc := range mapIDTeste {
 		t.Run(nome, func(t *testing.T) {
-			err := servicoDeletarLivro(tc.ID)
+			err := verifiers.ServicoDeletarLivro(tc.ID)
 			if (err != nil) != tc.esperaErro {
 				t.Errorf("[%s] Resultado inesperado: erro recebido = %v, esperava erro? %v",
 					nome, err, tc.esperaErro)
@@ -86,21 +90,21 @@ func testarServicoDeletarLivro(t *testing.T) {
 
 var mapLivroEditarTeste = map[string]struct {
 	id         uint
-	livro      Livro
+	livro      models.Livro
 	esperaErro bool
 }{
-	"Normal":       {id: 1, livro: Livro{Titulo: "Normal", Autor: "Normal", Preco: 100, Ano: 1984, Quantidade: 20}, esperaErro: false},
-	"Sem titulo":   {id: 2, livro: Livro{Titulo: "", Autor: "Normal", Preco: 100, Ano: 1984, Quantidade: 20}, esperaErro: true},
-	"Sem Autor":    {id: 3, livro: Livro{Titulo: "Sem autor", Autor: "", Preco: 100, Ano: 1984, Quantidade: 20}, esperaErro: true},
-	"Preço errado": {id: 4, livro: Livro{Titulo: "Preço errado", Autor: "Preço errado", Preco: -100, Ano: 1984, Quantidade: 20}, esperaErro: true},
-	"Ano errado":   {id: 5, livro: Livro{Titulo: "Ano errado", Autor: "Ano errado", Preco: 100, Ano: 9000, Quantidade: 20}, esperaErro: true},
+	"Normal":       {id: 1, livro: models.Livro{Titulo: "Normal", Autor: "Normal", Preco: 100, Ano: 1984, Quantidade: 20}, esperaErro: false},
+	"Sem titulo":   {id: 2, livro: models.Livro{Titulo: "", Autor: "Normal", Preco: 100, Ano: 1984, Quantidade: 20}, esperaErro: true},
+	"Sem Autor":    {id: 3, livro: models.Livro{Titulo: "Sem autor", Autor: "", Preco: 100, Ano: 1984, Quantidade: 20}, esperaErro: true},
+	"Preço errado": {id: 4, livro: models.Livro{Titulo: "Preço errado", Autor: "Preço errado", Preco: -100, Ano: 1984, Quantidade: 20}, esperaErro: true},
+	"Ano errado":   {id: 5, livro: models.Livro{Titulo: "Ano errado", Autor: "Ano errado", Preco: 100, Ano: 9000, Quantidade: 20}, esperaErro: true},
 }
 
 func testarServicoAtualizarLivro(t *testing.T) {
 	livroParaEditar := criarLivroTeste(t)
 	for nome, tc := range mapLivroEditarTeste {
 		t.Run(nome, func(t *testing.T) {
-			err := servicoAtualizarLivro(livroParaEditar.ID, tc.livro)
+			err := verifiers.ServicoAtualizarLivro(livroParaEditar.ID, tc.livro)
 			if (err != nil) != tc.esperaErro {
 				t.Errorf("[%s] Resultado inesperado: erro recebido = %v, esperava erro? %v",
 					nome, err, tc.esperaErro)
@@ -122,7 +126,7 @@ func testarServicoBuscarLivroTitulo(t *testing.T) {
 	criarLivroTeste(t)
 	for nome, tc := range mapLivroTituloBuscar {
 		t.Run(nome, func(t *testing.T) {
-			_, err := servicoBuscarLivroTitulo(tc.Título)
+			_, err := verifiers.ServicoBuscarLivroTitulo(tc.Título)
 
 			if (err != nil) != tc.esperaErro {
 				t.Errorf("[%s] Resultado inesperado: erro recebido = %v, esperava erro? %v",
@@ -145,7 +149,7 @@ func testarServicoBuscarLivroAutor(t *testing.T) {
 	criarLivroTeste(t)
 	for nome, tc := range mapLivroAutorBuscar {
 		t.Run(nome, func(t *testing.T) {
-			_, err := servicoBuscarLivroTitulo(tc.Autor)
+			_, err := verifiers.ServicoBuscarLivroTitulo(tc.Autor)
 
 			if (err != nil) != tc.esperaErro {
 				t.Errorf("[%s] Resultado inesperado: erro recebido = %v, esperava erro? %v",
@@ -171,10 +175,10 @@ func testarServicoBuscarLivroID(t *testing.T) {
 	}{ID: livro.ID, esperaErro: false}
 	for nome, tc := range mapLivroIDBuscar {
 		t.Run(nome, func(t *testing.T) {
-			_, err := servicoBuscarLivroID(tc.ID)
+			_, err := verifiers.ServicoBuscarLivroID(tc.ID)
 			if (err != nil) != tc.esperaErro {
 				t.Errorf("[%s] Resultado inesperado: erro recebido = %v, esperava erro? %v",
-					nome, err, listarID())
+					nome, err, database.ListarID())
 			}
 		})
 	}

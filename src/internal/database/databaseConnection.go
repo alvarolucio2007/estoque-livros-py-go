@@ -72,13 +72,13 @@ func DeletarLivro(id uint) error {
 
 func AtualizarLivro(id uint, dados models.Livro) error {
 	dados.ID = id
-	return checarResultado(DB.Model(&models.Livro{}).Where("id=?", id).Omit("id").Select("*").Updates(dados))
+	return ChecarResultado(DB.Model(&models.Livro{}).Where("id=?", id).Omit("id").Select("*").Updates(dados))
 }
 
 func BuscarLivroTitulo(titulo string) ([]models.Livro, error) {
 	var livrosEncontados []models.Livro
 	res := DB.Where("titulo LIKE ?", "%"+titulo+"%").Find(&livrosEncontados)
-	err := checarResultado(res)
+	err := ChecarResultado(res)
 	if err != nil {
 		return nil, err
 	}
@@ -91,7 +91,7 @@ func BuscarLivroTitulo(titulo string) ([]models.Livro, error) {
 func BuscarLivroAutor(autor string) ([]models.Livro, error) {
 	var livrosEncontados []models.Livro
 	res := DB.Where("autor LIKE ?", "%"+autor+"%").Find(&livrosEncontados)
-	err := checarResultado(res)
+	err := ChecarResultado(res)
 	if err != nil {
 		return nil, err
 	}

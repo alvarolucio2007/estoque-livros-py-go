@@ -10,7 +10,7 @@ import (
 	"github.com/alvarolucio2007/estoque-livros-py/src/internal/models"
 )
 
-func servicoAdicionarLivro(titulo string, autor string, preco float64, ano int, quantidade uint) error {
+func ServicoAdicionarLivro(titulo string, autor string, preco float64, ano int, quantidade uint) error {
 	if titulo == "" {
 		return errors.New("título não pode ficar em branco")
 	}
@@ -37,14 +37,14 @@ func servicoAdicionarLivro(titulo string, autor string, preco float64, ano int, 
 	return database.AdicionarLivro(novoLivro)
 }
 
-func servicoDeletarLivro(id uint) error {
+func ServicoDeletarLivro(id uint) error {
 	if id == 0 {
 		return errors.New("id não pode ser 0")
 	}
 	return database.DeletarLivro(id)
 }
 
-func servicoAtualizarLivro(id uint, novosDados models.Livro) error {
+func ServicoAtualizarLivro(id uint, novosDados models.Livro) error {
 	livroExistente, err := database.BuscarPorID(id)
 	if err != nil {
 		return fmt.Errorf("erro ao consultar o banco: %w", err)
@@ -75,7 +75,7 @@ func servicoAtualizarLivro(id uint, novosDados models.Livro) error {
 	return nil
 }
 
-func servicoBuscarLivroTitulo(titulo string) ([]models.Livro, error) {
+func ServicoBuscarLivroTitulo(titulo string) ([]models.Livro, error) {
 	if titulo == "" {
 		return nil, errors.New("título não pode ficar vazio")
 	}
@@ -89,7 +89,7 @@ func servicoBuscarLivroAutor(autor string) ([]models.Livro, error) {
 	return database.BuscarLivroAutor(autor) // buscarLivroAutor já retorna []Livro,nil então não precisa colocar nil
 }
 
-func servicoBuscarLivroID(id uint) (*models.Livro, error) {
+func ServicoBuscarLivroID(id uint) (*models.Livro, error) {
 	if id == 0 {
 		return nil, errors.New("id não pode ser 0")
 	}

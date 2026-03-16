@@ -3,11 +3,14 @@ package routes
 import (
 	"strconv"
 
+	"github.com/alvarolucio2007/estoque-livros-py/src/internal/database"
+	"github.com/alvarolucio2007/estoque-livros-py/src/internal/models"
+	"github.com/alvarolucio2007/estoque-livros-py/src/internal/verifiers"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
 
-func setupAPI() {
+func SetupAPI() {
 	gin.SetMode(gin.ReleaseMode)
 	r := gin.Default()
 	r.Use(gin.Logger())
@@ -21,7 +24,7 @@ func setupAPI() {
 	r.Use(cors.New(config))
 
 	r.GET("/livros", func(c *gin.Context) {
-		livros, err := database.carregarDados()
+		livros, err := database.CarregarDados()
 		if err != nil {
 			c.JSON(500, gin.H{"error": "Erro ao ler banco de dados"})
 			return
@@ -29,11 +32,11 @@ func setupAPI() {
 		c.JSON(200, livros)
 	})
 	r.GET("/livros/listar_id", func(c *gin.Context) {
-		resultado := listarID()
+		resultado := database.ListarID()
 		c.JSON(200, resultado)
 	})
 	r.GET("/livros/relatorio", func(c *gin.Context) {
-		resultado, err := gerarRelatorio()
+		resultado, err := database.GerarRelatorio()
 		if err != nil {
 			c.JSON(500, gin.H{"error": "erro ao gerar relatorio"})
 			return
@@ -46,7 +49,7 @@ func setupAPI() {
 		if err != nil {
 			c.JSON(400, gin.H{"error": "o id deve ser um número válido"})
 		}
-		resultado, err := servicoBuscarLivroID(uint(idUint))
+		resultado, err := verifiers.ServicoBuscarLivroID(uint(idUint))
 		if err != nil {
 			c.JSON(500, gin.H{"error": "erro ao procurar livro por id"})
 			return
@@ -55,7 +58,7 @@ func setupAPI() {
 	})
 	r.GET("/livros/titulo/:titulo", func(c *gin.Context) {
 		tituloStr := c.Param("titulo")
-		resultado, err := servicoBuscarLivroTitulo(tituloStr)
+		resultado, err := verifiers.ServicoBuscarLivroTitulo(tituloStr)
 		if err != nil {
 			c.JSON(500, gin.H{"error": "erro ao procurar livro por título"})
 			return
@@ -64,7 +67,7 @@ func setupAPI() {
 	})
 	r.GET("/livros/autor/:autor", func(c *gin.Context) {
 		tituloStr := c.Param("autor")
-		resultado, err := servicoBuscarLivroTitulo(tituloStr)
+		resultado, err := verifiers.ServicoBuscarLivroTitulo(tituloStr)
 		if err != nil {
 			c.JSON(500, gin.H{"error": "erro ao procurar livro por autor"})
 			return
@@ -72,12 +75,12 @@ func setupAPI() {
 		c.JSON(200, resultado)
 	})
 	r.POST("/livros", func(c *gin.Context) {
-		var novoLivro LivroCadastrar
+		var novoLivro models.LivroCadastrar
 		if err := c.ShouldBindJSON(&novoLivro); err != nil {
 			c.JSON(400, gin.H{"error": "JSON inválido: " + err.Error()})
 			return
 		}
-		err := servicoAdicionarLivro(novoLivro.Titulo, novoLivro.Autor, novoLivro.Preco, novoLivro.Ano, novoLivro.Quantidade)
+		err := verifiers.ServicoAdicionarLivro(novoLivro.Titulo, novoLivro.Autor, novoLivro.Preco, novoLivro.Ano, novoLivro.Quantidade)
 		if err != nil {
 			c.JSON(500, gin.H{"error": "erro ao salvar no banco"})
 			return
@@ -91,14 +94,14 @@ func setupAPI() {
 			c.JSON(400, gin.H{"mensagem": "Não foi possível atualizar", "codigo": 400})
 			return
 		}
-		var dadosAtualizados Livro
+		var dadosAtualizados models.Livro
 		if err := c.ShouldBindJSON(&dadosAtualizados); err != nil {
-			c.JSON(404, RespostaErro{Mensagem: "livro não encontrado"})
+			c.JSON(404, models.RespostaErro{Mensagem: "livro não encontrado"})
 			return
 		}
-		err = servicoAtualizarLivro(uint(idUint), dadosAtualizados)
+		err = verifiers.ServicoAtualizarLivro(uint(idUint), dadosAtualizados)
 		if err != nil {
-			c.JSON(500, RespostaErro{Mensagem: "falha ao atualizar livro", Detalhe: err.Error()})
+			c.JSON(500, models.RespostaErro{Mensagem: "falha ao atualizar livro", Detalhe: err.Error()})
 			return
 		}
 		c.JSON(200, dadosAtualizados)
@@ -110,7 +113,7 @@ func setupAPI() {
 			c.JSON(400, gin.H{"error": "o id deve ser um número válido"})
 			return
 		}
-		err = servicoDeletarLivro(uint(idUint))
+		err = verifiers.ServicoDeletarLivro(uint(idUint))
 		if err != nil {
 			c.JSON(500, gin.H{"error": "erro ao deletar livro"})
 			return
