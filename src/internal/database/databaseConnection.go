@@ -37,7 +37,7 @@ func ChecarResultado(resultado *gorm.DB) error {
 		return resultado.Error
 	}
 	if resultado.RowsAffected == 0 {
-		return errors.New("nenhum livro encontrado com esse ID")
+		return models.ErrLivroNaoEncontrado
 	}
 	return nil
 }
@@ -65,7 +65,7 @@ func DeletarLivro(id uint) error {
 		return resultado.Error
 	}
 	if resultado.RowsAffected == 0 {
-		return errors.New("livro não encontrado")
+		return models.ErrLivroNaoEncontrado
 	}
 	return nil
 }
@@ -83,7 +83,7 @@ func BuscarLivroTitulo(titulo string) ([]models.Livro, error) {
 		return nil, err
 	}
 	if len(livrosEncontados) == 0 {
-		return nil, errors.New("não há livros")
+		return nil, models.ErrLivroNaoEncontrado
 	}
 	return livrosEncontados, nil
 }
@@ -96,7 +96,7 @@ func BuscarLivroAutor(autor string) ([]models.Livro, error) {
 		return nil, err
 	}
 	if len(livrosEncontados) == 0 {
-		return nil, errors.New("não há livros")
+		return nil, models.ErrLivroNaoEncontrado
 	}
 	return livrosEncontados, nil
 }
@@ -104,10 +104,18 @@ func BuscarLivroAutor(autor string) ([]models.Livro, error) {
 func GerarRelatorio() (map[string]any, error) {
 	var total, disponiveis, indisponiveis int64
 	var valorTotal float64
-	DB.Model(&models.Livro{}).Count(&total)
-	DB.Model(&models.Livro{}).Where("disponivel=?", true).Count(&disponiveis)
-	DB.Model(&models.Livro{}).Where("disponivel=?", false).Count(&indisponiveis)
-	DB.Model(&models.Livro{}).Select("SUM(preco*quantidade)").Scan(&valorTotal)
+	if err := DB.Model(&models.Livro{}).Count(&total).Error; err != nil {
+		return nil, models.ErrInternoDBFatalDB
+	}
+	if err := DB.Model(&models.Livro{}).Where("disponivel=?", true).Count(&disponiveis).Error; err != nil {
+		return nil, models.ErrInternoDBFatalDB
+	}
+	if err := DB.Model(&models.Livro{}).Where("disponivel=?", false).Count(&indisponiveis).Error; err != nil {
+		return nil, models.ErrInternoDBFatalDB
+	}
+	if err := DB.Model(&models.Livro{}).Select("SUM(preco*quantidade)").Scan(&valorTotal).Error; err != nil {
+		return nil, models.ErrInternoDBFatalDB
+	}
 	return map[string]any{
 		"total_livros":         total,
 		"livros_disponiveis":   disponiveis,
@@ -132,7 +140,7 @@ func BuscarPorID(id uint) (*models.Livro, error) {
 	var livro models.Livro
 	if err := DB.First(&livro, id).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, errors.New("livro não encontrado")
+			return nil, models.ErrLivroNaoEncontrado
 		}
 		return nil, err
 	}

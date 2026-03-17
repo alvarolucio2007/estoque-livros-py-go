@@ -2,7 +2,6 @@
 package verifiers
 
 import (
-	"errors"
 	"fmt"
 	"time"
 
@@ -12,16 +11,16 @@ import (
 
 func ServicoAdicionarLivro(titulo string, autor string, preco float64, ano int, quantidade uint) error {
 	if titulo == "" {
-		return errors.New("título não pode ficar em branco")
+		return models.ErrTituloVazio
 	}
 	if autor == "" {
-		return errors.New("autor não pode ficar em branco")
+		return models.ErrAutorVazio
 	}
 	if preco < 0 {
-		return errors.New("o preço tem que ser maior que 0")
+		return models.ErrPrecoInvalido
 	}
 	if ano > time.Now().Year()+1 {
-		return fmt.Errorf("o ano %d excede o limite de lançamentos futuros (%d)", ano, time.Now().Year()+1)
+		return models.ErrAnoInvalido
 	}
 	disponivel := quantidade > 0
 
@@ -39,7 +38,7 @@ func ServicoAdicionarLivro(titulo string, autor string, preco float64, ano int, 
 
 func ServicoDeletarLivro(id uint) error {
 	if id == 0 {
-		return errors.New("id não pode ser 0")
+		return models.ErrIDNulo
 	}
 	return database.DeletarLivro(id)
 }
@@ -50,19 +49,19 @@ func ServicoAtualizarLivro(id uint, novosDados models.Livro) error {
 		return fmt.Errorf("erro ao consultar o banco: %w", err)
 	}
 	if livroExistente == nil {
-		return errors.New("livro não encontrado")
+		return models.ErrLivroNaoEncontrado
 	}
 	if novosDados.Titulo == "" {
-		return errors.New("título não pode ficar vazio")
+		return models.ErrTituloVazio
 	}
 	if novosDados.Autor == "" {
-		return errors.New("autor não pode ficar vazio")
+		return models.ErrAutorVazio
 	}
 	if novosDados.Preco < 0 {
-		return errors.New("o preco nao pode ser negativo")
+		return models.ErrPrecoInvalido
 	}
 	if novosDados.Ano > time.Now().Year()+1 {
-		return errors.New("ano inválido")
+		return models.ErrAnoInvalido
 	}
 
 	status := novosDados.Quantidade > 0
@@ -70,28 +69,28 @@ func ServicoAtualizarLivro(id uint, novosDados models.Livro) error {
 
 	err = database.AtualizarLivro(id, novosDados)
 	if err != nil {
-		return fmt.Errorf("falha ao atualizar: %w", err)
+		return err // o erro já vem limpo!
 	}
 	return nil
 }
 
 func ServicoBuscarLivroTitulo(titulo string) ([]models.Livro, error) {
 	if titulo == "" {
-		return nil, errors.New("título não pode ficar vazio")
+		return nil, models.ErrTituloVazio
 	}
 	return database.BuscarLivroTitulo(titulo) // buscarLivroTitulo já retorna []Livro,error então não precisa colocar nil
 }
 
 func ServicoBuscarLivroAutor(autor string) ([]models.Livro, error) {
 	if autor == "" {
-		return nil, errors.New("autor não pode ficar vazio")
+		return nil, models.ErrAutorVazio
 	}
 	return database.BuscarLivroAutor(autor) // buscarLivroAutor já retorna []Livro,nil então não precisa colocar nil
 }
 
 func ServicoBuscarLivroID(id uint) (*models.Livro, error) {
 	if id == 0 {
-		return nil, errors.New("id não pode ser 0")
+		return nil, models.ErrIDNulo
 	}
 	return database.BuscarPorID(id)
 }
