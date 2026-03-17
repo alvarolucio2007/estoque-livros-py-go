@@ -26,7 +26,3 @@ type LivroCadastrar struct {
 	Ano        int     `json:"ano"`
 	Quantidade uint    `json:"quantidade"`
 }
-type RespostaErro struct {
-	Mensagem string `json:"mensagem"`
-	Detalhe  string `json:"detalhe,omitempty"`
-}

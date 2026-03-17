@@ -116,18 +116,16 @@ func GerarRelatorio() (map[string]any, error) {
 	}, nil
 }
 
-func ListarID() []uint {
-	var livros []models.Livro
-	DB.Find(&livros)
-	setIds := make(map[uint]struct{})
-	for _, livro := range livros {
-		setIds[uint(livro.ID)] = struct{}{}
+func ListarID() ([]uint, error) {
+	var ids []uint
+	err := DB.Model(&models.Livro{}).Distinct().Pluck("id", &ids).Error
+	if err != nil {
+		return nil, models.ErrInternoDBFatalDB
 	}
-	idUnicos := make([]uint, 0, len(setIds))
-	for id := range setIds {
-		idUnicos = append(idUnicos, id)
+	if len(ids) == 0 {
+		return nil, models.ErrLivroNaoEncontrado
 	}
-	return idUnicos
+	return ids, nil
 }
 
 func BuscarPorID(id uint) (*models.Livro, error) {

@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"github.com/alvarolucio2007/estoque-livros-py/src/internal/database"
+	"github.com/alvarolucio2007/estoque-livros-py/src/internal/handlers"
 	"github.com/alvarolucio2007/estoque-livros-py/src/internal/models"
 	"github.com/alvarolucio2007/estoque-livros-py/src/internal/verifiers"
 	"github.com/gin-contrib/cors"
@@ -27,20 +28,24 @@ func SetupAPI() {
 	r.GET("/livros", func(c *gin.Context) {
 		livros, err := database.CarregarDados()
 		if err != nil {
-			status, resposta := ErrorHandler(err)
+			status, resposta := handlers.ErrorHandler(err)
 			c.JSON(status, resposta)
 			return
 		}
 		c.JSON(200, livros)
 	})
 	r.GET("/livros/listar_id", func(c *gin.Context) {
-		resultado := database.ListarID()
+		resultado, err := database.ListarID()
+		if err != nil {
+			status, resposta := handlers.ErrorHandler(err)
+			c.JSON(status, resposta)
+		}
 		c.JSON(200, resultado)
 	})
 	r.GET("/livros/relatorio", func(c *gin.Context) {
 		resultado, err := database.GerarRelatorio()
 		if err != nil {
-			status, resposta := ErrorHandler(err)
+			status, resposta := handlers.ErrorHandler(err)
 			c.JSON(status, resposta)
 			return
 		}
@@ -55,7 +60,7 @@ func SetupAPI() {
 		}
 		resultado, err := verifiers.ServicoBuscarLivroID(uint(idUint))
 		if err != nil {
-			status, resposta := ErrorHandler(err)
+			status, resposta := handlers.ErrorHandler(err)
 			c.JSON(status, resposta)
 			return
 		}
@@ -65,7 +70,7 @@ func SetupAPI() {
 		tituloStr := c.Param("titulo")
 		resultado, err := verifiers.ServicoBuscarLivroTitulo(tituloStr)
 		if err != nil {
-			status, resposta := ErrorHandler(err)
+			status, resposta := handlers.ErrorHandler(err)
 			c.JSON(status, resposta)
 			return
 		}
@@ -75,7 +80,7 @@ func SetupAPI() {
 		tituloStr := c.Param("autor")
 		resultado, err := verifiers.ServicoBuscarLivroAutor(tituloStr)
 		if err != nil {
-			status, resposta := ErrorHandler(err)
+			status, resposta := handlers.ErrorHandler(err)
 			c.JSON(status, resposta)
 			return
 		}
@@ -84,13 +89,13 @@ func SetupAPI() {
 	r.POST("/livros", func(c *gin.Context) {
 		var novoLivro models.LivroCadastrar
 		if err := c.ShouldBindJSON(&novoLivro); err != nil {
-			status, resposta := ErrorHandler(err)
+			status, resposta := handlers.ErrorHandler(err)
 			c.JSON(status, resposta)
 			return
 		}
 		err := verifiers.ServicoAdicionarLivro(novoLivro.Titulo, novoLivro.Autor, novoLivro.Preco, novoLivro.Ano, novoLivro.Quantidade)
 		if err != nil {
-			status, resposta := ErrorHandler(err)
+			status, resposta := handlers.ErrorHandler(err)
 			c.JSON(status, resposta)
 			return
 		}
@@ -110,7 +115,7 @@ func SetupAPI() {
 		}
 		err = verifiers.ServicoAtualizarLivro(uint(idUint), dadosAtualizados)
 		if err != nil {
-			status, resposta := ErrorHandler(err)
+			status, resposta := handlers.ErrorHandler(err)
 			c.JSON(status, resposta)
 			return
 		}
@@ -125,7 +130,7 @@ func SetupAPI() {
 		}
 		err = verifiers.ServicoDeletarLivro(uint(idUint))
 		if err != nil {
-			status, resposta := ErrorHandler(err)
+			status, resposta := handlers.ErrorHandler(err)
 			c.JSON(status, resposta)
 			return
 		}

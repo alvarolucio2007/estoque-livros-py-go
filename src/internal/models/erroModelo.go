@@ -30,3 +30,9 @@ var (
 	ErrLivroNaoEncontrado = errors.New("nenhum livro encontrado")
 	ErrIDNulo             = errors.New("o ID precisa ser válido")
 )
+
+// RespostaErro monta respostas JSON
+type RespostaErro struct {
+	Mensagem string `json:"mensagem"`
+	Detalhe  string `json:"detalhe,omitempty"`
+}

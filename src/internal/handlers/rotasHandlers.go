@@ -1,13 +1,22 @@
-package routes
+// Package handlers "monta" as rotas e tals da API pra produção e testes.
+package handlers
 
 import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"strconv"
 
+	"github.com/alvarolucio2007/estoque-livros-py/src/internal/database"
 	"github.com/alvarolucio2007/estoque-livros-py/src/internal/models"
+	"github.com/alvarolucio2007/estoque-livros-py/src/internal/verifiers"
 	"github.com/gin-gonic/gin"
 )
+
+func SendError(c *gin.Context, err error) {
+	status, resposta := ErrorHandler(err)
+	c.JSON(status, resposta)
+}
 
 func ErrorHandler(err error) (int, gin.H) {
 	if errors.Is(err, models.ErrTituloVazio) || errors.Is(err, models.ErrPrecoInvalido) || errors.Is(err, models.ErrIDNulo) {
@@ -30,4 +39,57 @@ func ErrorHandler(err error) (int, gin.H) {
 		return http.StatusBadRequest, gin.H{"error": models.ErrTipagemJSONAPI.Error()}
 	}
 	return http.StatusInternalServerError, gin.H{"error": "erro catastrófico, contate o dev!"}
+}
+
+func HandlerListarLivros(c *gin.Context) {
+	livros, err := database.CarregarDados()
+	if err != nil {
+		SendError(c, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, livros)
+}
+
+func HandlerListarID(c *gin.Context) {
+	listaID, err := database.ListarID()
+	if err != nil {
+		SendError(c, err)
+		return
+	}
+	c.JSON(http.StatusOK, listaID)
+}
+
+func HandlerListarRelatorio(c *gin.Context) {
+	relatorio, err := database.GerarRelatorio()
+	if err != nil {
+		SendError(c, err)
+		return
+	}
+	c.JSON(http.StatusOK, relatorio)
+}
+
+func HandlerBuscarID(c *gin.Context) {
+	idStr := c.Param("livro_id")
+	idUint, err := strconv.ParseUint(idStr, 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": models.ErrIDNulo.Error()})
+		return
+	}
+	resultado, err := verifiers.ServicoBuscarLivroID(uint(idUint))
+	if err != nil {
+		SendError(c, err)
+		return
+	}
+	c.JSON(http.StatusOK, resultado)
+}
+
+func HandelerBuscarTitulo(c *gin.Context) {
+	tituloStr := c.Param("titulo")
+	resultado, err := verifiers.ServicoBuscarLivroTitulo(tituloStr)
+	if err != nil {
+		SendError(c, err)
+		return
+	}
+	c.JSON(http.StatusOK, resultado)
 }

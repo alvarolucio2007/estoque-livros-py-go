@@ -5,8 +5,6 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/alvarolucio2007/estoque-livros-py/src/internal/database"
-	"github.com/alvarolucio2007/estoque-livros-py/src/internal/models"
 	"github.com/gin-gonic/gin"
 )
 
@@ -14,24 +12,6 @@ func TestAPI(t *testing.T) {
 	t.Run("apiListarLivros", func(t *testing.T) {
 		testarHandlerCarregarLivros(t)
 	})
-}
-
-// 1. Defina o Handler como uma função separada
-func HandlerListarLivros(c *gin.Context) {
-	livros, err := database.CarregarDados()
-	if err != nil {
-		// Se o erro for "não há livro", talvez você queira dar um 404 ou 200 vazio
-		if err.Error() == "não há livro" {
-			c.JSON(http.StatusOK, []models.Livro{}) // Retorna lista vazia, status 200
-			return
-		}
-
-		// Erro real de banco (conexão, etc)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Erro interno no servidor"})
-		return
-	}
-
-	c.JSON(http.StatusOK, livros)
 }
 
 func testarHandlerCarregarLivros(t *testing.T) {
