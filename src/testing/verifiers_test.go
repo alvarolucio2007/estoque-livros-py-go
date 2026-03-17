@@ -177,8 +177,8 @@ func testarServicoBuscarLivroID(t *testing.T) {
 		t.Run(nome, func(t *testing.T) {
 			_, err := verifiers.ServicoBuscarLivroID(tc.ID)
 			if (err != nil) != tc.esperaErro {
-				t.Errorf("[%s] Resultado inesperado: erro recebido = %v, esperava erro? %v",
-					nome, err, database.ListarID())
+				t.Errorf("[%s] Resultado inesperado: erro recebido = %v, esperava erro? %v ",
+					nome, err, tc.esperaErro)
 			}
 		})
 	}

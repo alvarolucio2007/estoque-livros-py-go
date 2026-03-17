@@ -100,9 +100,12 @@ func testarEditarLivro(t *testing.T) {
 }
 
 func testarListarID(t *testing.T) {
-	listaID := database.ListarID()
+	listaID, err := database.ListarID()
 	if len(listaID) != 1 {
 		t.Error("log: quantidade de IDs inesperada, esperado: %i, atual: %i", 1, len(listaID))
+	}
+	if err != nil {
+		t.Errorf("log: erro interno: %v", err)
 	}
 }
 
