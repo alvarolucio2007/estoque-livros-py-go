@@ -4,16 +4,9 @@ import (
 	"testing"
 
 	"github.com/alvarolucio2007/estoque-livros-py/src/internal/database"
+	"github.com/alvarolucio2007/estoque-livros-py/src/internal/helpers"
 	"github.com/alvarolucio2007/estoque-livros-py/src/internal/models"
 )
-
-var livroExemplo = models.Livro{
-	Titulo:     "Teste",
-	Autor:      "autorTeste",
-	Preco:      999,
-	Ano:        1500,
-	Quantidade: 150,
-}
 
 func TestDatabaseConnection(t *testing.T) {
 	t.Run("Adicionar", func(t *testing.T) {
@@ -41,16 +34,24 @@ func TestDatabaseConnection(t *testing.T) {
 }
 
 func testarAdicionarLivro(t *testing.T) {
+	livroExemplo := helpers.Livro
 	disponivel := true
 	livroExemplo.Disponivel = &disponivel
 	err := database.AdicionarLivro(livroExemplo)
 	if err != nil {
 		t.Errorf("Livro não salvo: %v", err)
 	}
+	t.Cleanup(func() {
+		database.DB.Unscoped().Delete(&livroExemplo)
+	})
 }
 
 func testarCarregarDados(t *testing.T) {
+	helpers.CriarLivroTesteAux(t)
 	listaLivros, err := database.CarregarDados()
+	t.Cleanup(func() {
+		database.DB.Unscoped().Delete(&helpers.Livro)
+	})
 	if err != nil {
 		t.Fatalf("Erro ao carregar dados: %v", err)
 	}
@@ -58,7 +59,7 @@ func testarCarregarDados(t *testing.T) {
 		t.Fatal("A lista está vazia, esperava 1 livro.")
 	}
 	recebido := listaLivros[0]
-	esperado := livroExemplo
+	esperado := helpers.Livro
 	recebido.ID = 0
 	if *recebido.Disponivel != *esperado.Disponivel {
 		t.Error("Disponibilidade errada")
@@ -70,9 +71,13 @@ func testarCarregarDados(t *testing.T) {
 }
 
 func testarEditarLivro(t *testing.T) {
+	helpers.CriarLivroTesteAux(t)
 	disponivel := true
 	livroEdicao := models.Livro{Titulo: "Teste2", Autor: "autorTeste2", Preco: 9992, Ano: 1502, Quantidade: 152, Disponivel: &disponivel}
 	err := database.AtualizarLivro(1, livroEdicao)
+	t.Cleanup(func() {
+		database.DB.Unscoped().Delete(&helpers.Livro)
+	})
 	if err != nil {
 		t.Fatalf("log: erro ao atualizar livro, %v", err)
 	}
@@ -96,7 +101,6 @@ func testarEditarLivro(t *testing.T) {
 	if *livroEdicao.Disponivel != *recebido.Disponivel {
 		t.Error("log: disponivel não editado")
 	}
-	livroExemplo = livroEdicao
 }
 
 func testarListarID(t *testing.T) {
@@ -110,32 +114,35 @@ func testarListarID(t *testing.T) {
 }
 
 func testarBuscarLivroTitulo(t *testing.T) {
-	listaLivros, err := database.BuscarLivroTitulo(livroExemplo.Titulo)
+	helpers.CriarLivroTesteAux(t)
+	listaLivros, err := database.BuscarLivroTitulo("Livro de Teste")
 	if err != nil {
 		t.Fatalf("log: erro interno na função buscarLivroTitulo: %v", err)
 	}
 	if len(listaLivros) == 0 {
 		t.Fatal("log: busca não encontrou nenhum livro")
 	}
-	if listaLivros[0].Titulo != livroExemplo.Titulo {
+	if listaLivros[0].Titulo != helpers.Livro.Titulo {
 		t.Error("log: busca errada por título")
 	}
 }
 
 func testarBuscarLivroAutor(t *testing.T) {
-	listaLivros, err := database.BuscarLivroAutor(livroExemplo.Autor)
+	helpers.CriarLivroTesteAux(t)
+	listaLivros, err := database.BuscarLivroAutor("Autor Teste")
 	if err != nil {
 		t.Fatalf("log: erro interno na função buscarLivroAutor %v", err)
 	}
 	if len(listaLivros) == 0 {
 		t.Fatal("log: busca nao encontrou livro algum")
 	}
-	if listaLivros[0].Autor != livroExemplo.Autor {
-		t.Errorf("log: busca errada por autor\nEsperado: %+v\nRecebido: %+v", livroExemplo, listaLivros[0])
+	if listaLivros[0].Autor != helpers.Livro.Autor {
+		t.Errorf("log: busca errada por autor\nEsperado: %+v\nRecebido: %+v", helpers.Livro, listaLivros[0])
 	}
 }
 
 func testarDeletarLivro(t *testing.T) {
+	helpers.CriarLivroTesteAux(t)
 	err := database.DeletarLivro(1)
 	if err != nil {
 		t.Fatalf("Erro interno: %v", err)
@@ -147,6 +154,7 @@ func testarDeletarLivro(t *testing.T) {
 }
 
 func testarRelatorio(t *testing.T) {
+	helpers.CriarLivroTesteAux(t)
 	relatorio, err := database.GerarRelatorio()
 	if err != nil {
 		t.Fatalf("Erro ao gerar relatório: %v", err)
@@ -160,7 +168,7 @@ func testarRelatorio(t *testing.T) {
 	if relatorio["livros_indisponiveis"].(int64) != 0 {
 		t.Error("log: relatório não retornou 0 lívros_indisponiveis")
 	}
-	if relatorio["valor_total_estoque"].(float64) != 1518784 {
-		t.Errorf("Valor total esperado: 1518784, valor dado: %.2f", relatorio["valor_total_estoque"])
+	if relatorio["valor_total_estoque"].(float64) != 12000 {
+		t.Errorf("Valor total esperado: 12000, valor dado: %.2f", relatorio["valor_total_estoque"])
 	}
 }

@@ -3,16 +3,45 @@ package test
 import (
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
+	"github.com/alvarolucio2007/estoque-livros-py/src/internal/database"
 	"github.com/alvarolucio2007/estoque-livros-py/src/internal/handlers"
+	"github.com/alvarolucio2007/estoque-livros-py/src/internal/models"
 	"github.com/gin-gonic/gin"
 )
 
 func TestAPI(t *testing.T) {
 	t.Run("apiListarLivros", func(t *testing.T) {
-		testarHandlerCarregarLivros(t)
+		TestHandlerListarLivros(t)
 	})
+	t.Run("apiCadastrarLivros", func(t *testing.T) {
+		TestHandlerCadastrarLivros(t)
+	})
+}
+
+func ChecarCodigo(t *testing.T, recebido int, esperado int) {
+	t.Helper()
+	if recebido != esperado {
+		t.Errorf("Esperava %d ,recebi %d", esperado, recebido)
+	}
+}
+
+func criarLivroTesteAux(t *testing.T) models.Livro {
+	livro := models.Livro{Titulo: "Livro de Teste", Autor: "Autor Teste", Preco: 120, Quantidade: 100, Ano: 1984}
+
+	if err := database.DB.Create(&livro).Error; err != nil {
+		t.Fatalf("Erro ao criar livro teste: %v", err)
+	}
+
+	// A partir daqui, qualquer teste que chamar essa função
+	// será limpo automaticamente no final.
+	t.Cleanup(func() {
+		database.DB.Unscoped().Delete(&livro)
+	})
+
+	return livro
 }
 
 func setupRouter() *gin.Engine {
@@ -40,7 +69,31 @@ func TestHandlerListarLivros(t *testing.T) {
 		t.Errorf("Esperava 200, recebi %d", w.Code)
 	}
 }
-func TestHandlerCadastrarLivros(t *testing.T){
-	r:=setupRouter()
+
+func TestHandlerListarID(t *testing.T) {
+	r := setupRouter()
+	criarLivroTesteAux(t)
+	req, _ := http.NewRequest("GET", "/livros/listar_id", nil)
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+	ChecarCodigo(t, w.Code, http.StatusOK)
+}
+
+func TestHandlerRelatorio(t *testing.T) {
+	r := setupRouter()
+
+	req, _ := http.NewRequest("GET", "/livros/relatorio", nil)
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+	ChecarCodigo(t, w.Code, http.StatusOK)
+}
+
+func TestHandlerCadastrarLivros(t *testing.T) {
+	r := setupRouter()
 	body := `{"titulo": "O Senhor dos Anéis", "autor": "Tolkien", "preco": 59.90, "ano": 1954, "quantidade": 10}`
+	req, _ := http.NewRequest("POST", "/livros", strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+	ChecarCodigo(t, w.Code, http.StatusCreated)
 }

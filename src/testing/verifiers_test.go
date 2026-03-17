@@ -58,6 +58,11 @@ func testarServicoAdicionarLivro(t *testing.T) {
 				t.Errorf("[%s] Resultado inesperado: erro recebido = %v, esperava erro? %v",
 					nome, err, tc.esperaErro)
 			}
+			if !tc.esperaErro && err == nil {
+				t.Cleanup(func() {
+					database.DB.Unscoped().Where("titulo=?", tc.livro.Titulo).Delete(&models.Livro{})
+				})
+			}
 		})
 	}
 }
@@ -68,7 +73,7 @@ var mapIDTeste = map[string]struct {
 }{
 	"Não retorna erro":    {ID: 1, esperaErro: false},
 	"Retorna erro":        {ID: 0, esperaErro: true},
-	"Não existe no banco": {ID: 1225, esperaErro: true},
+	"Não existe no banco": {ID: 1325, esperaErro: true},
 }
 
 func testarServicoDeletarLivro(t *testing.T) {
@@ -163,8 +168,8 @@ var mapLivroIDBuscar = map[string]struct {
 	ID         uint
 	esperaErro bool
 }{
-	"Título vazio":  {ID: 0, esperaErro: true},
-	"Título errado": {ID: 12, esperaErro: true},
+	"ID zero":   {ID: 0, esperaErro: true},
+	"ID errado": {ID: 999, esperaErro: true},
 }
 
 func testarServicoBuscarLivroID(t *testing.T) {

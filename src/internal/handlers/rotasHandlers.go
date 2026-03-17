@@ -150,5 +150,4 @@ func HandlerDeletarLivro(c *gin.Context) {
 		SendError(c, err)
 		return
 	}
-	c.JSON(http.StatusAccepted, "livro deletado com sucesso")
 }
