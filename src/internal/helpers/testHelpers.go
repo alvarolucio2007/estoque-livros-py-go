@@ -11,15 +11,16 @@ import (
 var Livro = models.Livro{Titulo: "Livro de Teste", Autor: "Autor Teste", Preco: 120, Quantidade: 100, Ano: 1984}
 
 func CriarLivroTesteAux(t *testing.T) models.Livro {
-	if err := database.DB.Create(&Livro).Error; err != nil {
+	novoLivro := models.Livro{Titulo: "Livro de Teste", Autor: "Autor Teste", Preco: 120, Quantidade: 100, Ano: 1984}
+	if err := database.DB.Create(&novoLivro).Error; err != nil {
 		t.Fatalf("Erro ao criar livro teste: %v", err)
 	}
 
 	// A partir daqui, qualquer teste que chamar essa função
 	// será limpo automaticamente no final.
 	t.Cleanup(func() {
-		database.DB.Unscoped().Delete(&Livro)
+		database.DB.Unscoped().Delete(&novoLivro)
 	})
 
-	return Livro
+	return novoLivro
 }

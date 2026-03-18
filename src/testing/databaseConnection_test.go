@@ -47,11 +47,8 @@ func testarAdicionarLivro(t *testing.T) {
 }
 
 func testarCarregarDados(t *testing.T) {
-	helpers.CriarLivroTesteAux(t)
+	esperado := helpers.CriarLivroTesteAux(t)
 	listaLivros, err := database.CarregarDados()
-	t.Cleanup(func() {
-		database.DB.Unscoped().Delete(&helpers.Livro)
-	})
 	if err != nil {
 		t.Fatalf("Erro ao carregar dados: %v", err)
 	}
@@ -59,11 +56,13 @@ func testarCarregarDados(t *testing.T) {
 		t.Fatal("A lista está vazia, esperava 1 livro.")
 	}
 	recebido := listaLivros[0]
-	esperado := helpers.Livro
-	recebido.ID = 0
+	if recebido.Disponivel == nil || esperado.Disponivel == nil {
+		t.Fatal("Erro: campo Disponivel veio nulo (nil)")
+	}
 	if *recebido.Disponivel != *esperado.Disponivel {
 		t.Error("Disponibilidade errada")
 	}
+	recebido.ID = esperado.ID
 	recebido.Disponivel = esperado.Disponivel
 	if recebido != esperado {
 		t.Errorf("Ainda há diferenças. \nRecebido: %+v\nEsperado: %+v", recebido, esperado)
@@ -71,13 +70,10 @@ func testarCarregarDados(t *testing.T) {
 }
 
 func testarEditarLivro(t *testing.T) {
-	helpers.CriarLivroTesteAux(t)
+	livroCriado := helpers.CriarLivroTesteAux(t)
 	disponivel := true
 	livroEdicao := models.Livro{Titulo: "Teste2", Autor: "autorTeste2", Preco: 9992, Ano: 1502, Quantidade: 152, Disponivel: &disponivel}
-	err := database.AtualizarLivro(1, livroEdicao)
-	t.Cleanup(func() {
-		database.DB.Unscoped().Delete(&helpers.Livro)
-	})
+	err := database.AtualizarLivro(livroCriado.ID, livroEdicao)
 	if err != nil {
 		t.Fatalf("log: erro ao atualizar livro, %v", err)
 	}
@@ -85,21 +81,24 @@ func testarEditarLivro(t *testing.T) {
 	if err != nil || len(listaLivros) == 0 {
 		t.Fatal("log: erro ao carregar dados após edição")
 	}
-	recebido := listaLivros[0]
+	recebido, _ := database.BuscarPorID(livroCriado.ID)
+	if recebido == nil {
+		t.Fatalf("log: livro a ser editado não está na db")
+	}
 	if livroEdicao.Titulo != recebido.Titulo {
-		t.Error("log: titulo nao editado")
+		t.Errorf("log: titulo nao editado, esperado: %v, recebido: %v", livroEdicao.Titulo, recebido.Titulo)
 	}
 	if livroEdicao.Autor != recebido.Autor {
-		t.Error("log: autor nao editado")
+		t.Errorf("log: autor nao editado,esperado: %v,recebido: %v", livroEdicao.Autor, recebido.Autor)
 	}
 	if livroEdicao.Ano != recebido.Ano {
-		t.Error("log: ano não editado")
+		t.Errorf("log: ano não editado,,esperado: %v,recebido: %v", livroEdicao.Ano, recebido.Ano)
 	}
 	if livroEdicao.Quantidade != recebido.Quantidade {
-		t.Error("log: quantidade não editada")
+		t.Errorf("log: quantidade não editada,esperado: %v,recebido: %v", livroEdicao.Quantidade, recebido.Quantidade)
 	}
 	if *livroEdicao.Disponivel != *recebido.Disponivel {
-		t.Error("log: disponivel não editado")
+		t.Errorf("log: disponivel não editado,esperado: %v,recebido: %v", livroEdicao.Disponivel, recebido.Disponivel)
 	}
 }
 
@@ -142,14 +141,21 @@ func testarBuscarLivroAutor(t *testing.T) {
 }
 
 func testarDeletarLivro(t *testing.T) {
-	helpers.CriarLivroTesteAux(t)
-	err := database.DeletarLivro(1)
+	livroCriado := helpers.CriarLivroTesteAux(t)
+
+	listaLivrosAntesDeletar, _ := database.CarregarDados()
+	err := database.DeletarLivro(livroCriado.ID)
 	if err != nil {
 		t.Fatalf("Erro interno: %v", err)
 	}
-	listaLivros, _ := database.CarregarDados()
-	if len(listaLivros) != 0 {
+	listaLivrosAposDeletar, _ := database.CarregarDados()
+	if len(listaLivrosAposDeletar) != len(listaLivrosAntesDeletar)-1 {
 		t.Error("Livro não foi apagado!")
+	}
+	if recebido, err := database.BuscarPorID(livroCriado.ID); err == nil && recebido != nil {
+		t.Error("log: o livro ainda existe.")
+	} else if err != nil {
+		t.Errorf("log: erro na busca por ID para checagem, erro: %v", err)
 	}
 }
 
@@ -159,16 +165,23 @@ func testarRelatorio(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Erro ao gerar relatório: %v", err)
 	}
-	if relatorio["total_livros"].(int64) != 1 {
+	listaLivros, _ := database.CarregarDados()
+
+	if relatorio["total_livros"].(int64) != int64(len(listaLivros)) {
 		t.Error("log: relatório não retornou 1 total_livros")
 	}
-	if relatorio["livros_disponiveis"].(int64) != 1 {
+
+	if relatorio["livros_disponiveis"].(int64) != int64(len(listaLivros)) {
 		t.Error("log: relatório não retornou 1 livros_disponiveis")
 	}
 	if relatorio["livros_indisponiveis"].(int64) != 0 {
 		t.Error("log: relatório não retornou 0 lívros_indisponiveis")
 	}
-	if relatorio["valor_total_estoque"].(float64) != 12000 {
+	somaListaLivros := 0.0
+	for _, livro := range listaLivros {
+		somaListaLivros += float64(livro.Quantidade) * livro.Preco
+	}
+	if relatorio["valor_total_estoque"].(float64) != somaListaLivros {
 		t.Errorf("Valor total esperado: 12000, valor dado: %.2f", relatorio["valor_total_estoque"])
 	}
 }

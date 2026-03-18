@@ -4,7 +4,7 @@ package models
 import "gorm.io/gorm"
 
 type Livro struct {
-	ID         uint    `json:"id" gorm:"primaryKey;autoIncrement"`
+	ID         uint    `json:"id" gorm:"primaryKey;autoIncrement;not null;check: id>0"`
 	Titulo     string  `json:"titulo" gorm:"not null"`
 	Autor      string  `json:"autor" gorm:"not null"`
 	Preco      float64 `json:"preco" gorm:"type:decimal(10,2)"`

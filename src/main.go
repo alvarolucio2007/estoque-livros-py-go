@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	"github.com/alvarolucio2007/estoque-livros-py/src/internal/database"
-	routes "github.com/alvarolucio2007/estoque-livros-py/src/internal/handlers"
+	"github.com/alvarolucio2007/estoque-livros-py/src/internal/routes"
 )
 
 func main() {
