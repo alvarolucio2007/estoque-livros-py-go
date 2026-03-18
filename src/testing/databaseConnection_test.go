@@ -154,7 +154,7 @@ func testarDeletarLivro(t *testing.T) {
 	}
 	if recebido, err := database.BuscarPorID(livroCriado.ID); err == nil && recebido != nil {
 		t.Error("log: o livro ainda existe.")
-	} else if err != nil {
+	} else if err != nil && err.Error() != "nenhum livro encontrado" {
 		t.Errorf("log: erro na busca por ID para checagem, erro: %v", err)
 	}
 }
