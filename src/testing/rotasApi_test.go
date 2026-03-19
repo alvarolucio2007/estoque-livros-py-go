@@ -1,6 +1,8 @@
 package test
 
 import (
+	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -8,6 +10,7 @@ import (
 
 	"github.com/alvarolucio2007/estoque-livros-py/src/internal/database"
 	"github.com/alvarolucio2007/estoque-livros-py/src/internal/handlers"
+	"github.com/alvarolucio2007/estoque-livros-py/src/internal/helpers"
 	"github.com/alvarolucio2007/estoque-livros-py/src/internal/models"
 	"github.com/gin-gonic/gin"
 )
@@ -18,6 +21,9 @@ func TestAPI(t *testing.T) {
 	})
 	t.Run("apiCadastrarLivros", func(t *testing.T) {
 		TestHandlerCadastrarLivros(t)
+	})
+	t.Run("apiBuscarID", func(t *testing.T) {
+		TestHandlerBuscarID(t)
 	})
 }
 
@@ -86,6 +92,21 @@ func TestHandlerRelatorio(t *testing.T) {
 	w := httptest.NewRecorder()
 	r.ServeHTTP(w, req)
 	ChecarCodigo(t, w.Code, http.StatusOK)
+}
+
+func TestHandlerBuscarID(t *testing.T) {
+	r := setupRouter()
+	livro := helpers.CriarLivroTesteAux(t)
+	url := fmt.Sprintf("/livros/%d", livro.ID)
+	req, _ := http.NewRequest("GET", url, nil)
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+	ChecarCodigo(t, w.Code, http.StatusOK)
+	var resultado models.Livro
+	_ = json.Unmarshal(w.Body.Bytes(), &resultado)
+	if resultado.Titulo != livro.Titulo {
+		t.Errorf("Esperava título %s, mas veio %s", livro.Titulo, resultado.Titulo)
+	}
 }
 
 func TestHandlerCadastrarLivros(t *testing.T) {
