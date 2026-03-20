@@ -1,40 +1,44 @@
 services:
+  # O Banco de Dados (O coração)
   db:
     image: postgres:15-alpine
-    restart: always
+    container_name: estoque_db
     environment:
       POSTGRES_USER: user
       POSTGRES_PASSWORD: password
       POSTGRES_DB: estoque_db
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U user -d estoque_db"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
+  # O Backend em Go (O motor)
   backend:
-    build: ./src
-    restart: always
-    depends_on:
-      db:
-        condition: service_healthy # Só sobe o Go quando o DB estiver pronto
-    environment:
-      DB_HOST: db
-      DB_PORT: 5432
+    build:          # <-- Agora com 2 espaços de recuo!
+      context: .
+      dockerfile: src/Dockerfile
+    container_name: estoque_backend
     ports:
-      - "8080:8080"
-
-  frontend:
-    build: ./front
-    restart: always
+      - "8000:8000"
+    environment:
+      - DB_HOST=db
+      - DB_USER=user
+      - DB_PASSWORD=password
+      - DB_NAME=estoque_db
+      - DB_PORT=5432
     depends_on:
-      - backend
+      - db
+
+  # O Frontend em Streamlit (O painel)
+  frontend:
+    build: ./front  # <-- Agora com 2 espaços de recuo!
+    container_name: estoque_frontend
     ports:
       - "8501:8501"
+    environment:
+      - API_URL=http://backend:8000 # <-- Espaço depois do traço é vital!
+    depends_on:
+      - backend
 
 volumes:
   postgres_data:

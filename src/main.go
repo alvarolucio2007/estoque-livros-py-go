@@ -9,8 +9,8 @@ import (
 )
 
 func main() {
-	go database.ConectarBanco()
-	go routes.SetupAPI()
+	database.ConectarBanco()
+	routes.SetupAPI()
 	log.Println("Servidor rodando na porta 8080...")
 
 	// ESTA LINHA É O QUE SEGURA O CONTAINER VIVO:

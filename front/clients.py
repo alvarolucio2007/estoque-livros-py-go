@@ -2,7 +2,7 @@ import requests
 import os
 
 
-API_URL = os.getenv("API_URL", "http://localhost:8000")
+API_URL = os.getenv("API_URL", "http://backend:8080")
 
 
 def _tratar_resposta(response):
