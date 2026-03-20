@@ -18,7 +18,7 @@ var DB *gorm.DB
 func ConectarBanco() {
 	dsn := os.Getenv("DATABASE_URL")
 	if dsn == "" {
-		dsn = "host=db user=user password=password dbname=estoque_db port=5432 sslmode=disable"
+		dsn = "host=localhost user=user password=password dbname=estoque_db port=5432 sslmode=disable"
 	}
 	var err error
 	DB, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})

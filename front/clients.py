@@ -2,22 +2,53 @@ import requests
 import os
 
 
-API_URL = os.getenv("API_URL", "http://backend:8000")
+API_URL = os.getenv("API_URL", "http://localhost:8000")
 
 
 def _tratar_resposta(response):
-    """Função auxiliar para validar o status code e tratar erros."""
-    if response.status_code in [200, 201]:  # 200: OK, 201: Created
+    """
+    Função auxiliar para validar o status code e tratar erros.
+    Centraliza a lógica de mensagens para o usuário.
+    """
+    # 1. Sucesso (200 OK, 201 Created, 204 No Content)
+    if 200 <= response.status_code < 300:
+        if (
+            response.status_code == 204 or not response.text
+        ):  # Deletado com sucesso, sem corpo
+            return {"status": "sucesso", "codigo": response.status_code}
         return response.json()
-    # Se chegou aqui, deu erro
+
+    # 2. Erros de Cliente (4xx)
+    mensagem = "Erro desconhecido"
+
     try:
+        # Tenta extrair a mensagem de erro que o seu GIN (Go) enviou
         err_json = response.json()
+        # O Gin geralmente envia "error" ou "message"
         mensagem = (
-            response.get("detail") or err_json.get("mensagem") or "Erro desconhecido"
+            err_json.get("error")
+            or err_json.get("message")
+            or err_json.get("detail")
+            or "Erro na requisição"
         )
     except Exception:
-        mensagem = f"Erro no servidor: {response.status_code}"
-    raise ValueError(mensagem)
+        # Se o backend não mandou um JSON (ex: erro 404 de rota inexistente)
+        mensagem = (
+            f"Erro {response.status_code}: Não foi possível processar a resposta."
+        )
+
+    # 3. Tratamento por Código Específico (Opcional, mas profissional)
+    if response.status_code == 401:
+        mensagem = "Não autorizado. Verifique suas credenciais."
+    elif response.status_code == 404:
+        mensagem = "Recurso não encontrado no servidor."
+    elif response.status_code == 422:
+        mensagem = "Dados inválidos. Verifique os campos enviados."
+    elif response.status_code >= 500:
+        mensagem = "O servidor de Backend (Go) está instável ou fora do ar."
+
+    # Em vez de ValueError, vamos lançar uma Exception mais clara
+    raise Exception(mensagem)
 
 
 # --- GET (Ler) ---
